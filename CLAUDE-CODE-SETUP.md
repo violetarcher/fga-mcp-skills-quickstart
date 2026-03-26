@@ -448,12 +448,32 @@ The skill includes pre-built patterns for:
 - Healthcare (HIPAA compliance)
 - Financial services (SOX, PCI compliance)
 
+## Demo Application (Coming Soon)
+
+A blank canvas Next.js demo app is planned for the `/demo-app` directory. See [DEMO-APP-PLAN.md](DEMO-APP-PLAN.md) for the complete implementation plan.
+
+**What it will include:**
+- Next.js 15 + TypeScript + Tailwind CSS
+- Auth0 authentication (working out of the box)
+- Auth0 FGA SDK with helper functions
+- LiteLLM chat agent integration
+- Generic utilities (no hardcoded authorization logic)
+- Example patterns and reference models
+
+**How sales engineers will use it:**
+1. Set up environment (.env.local with Auth0 + FGA + LiteLLM credentials)
+2. Use Claude Code to describe customer use case
+3. Claude Code designs FGA model, builds UI, adds authorization checks
+4. Run demo and show customer
+
+See [DEMO-APP-PLAN.md](DEMO-APP-PLAN.md) for detailed architecture and implementation plan.
+
 ## Future Enhancements
 
-See [NEXT-STEPS.md](NEXT-STEPS.md) for planned enhancements including:
-- Demo application setup (Next.js + Auth0 + FGA)
+See [NEXT-STEPS.md](NEXT-STEPS.md) for other planned enhancements including:
 - Additional customer scenario templates
 - SDK integration improvements
+- Industry-specific model libraries
 
 ## Further Reading
 

@@ -13,12 +13,13 @@ This is a packaged distribution that includes both the MCP server and FGA skill 
 
 ## What You Get
 
-This package provides two integrated components for OpenFGA development with Claude Code:
+This package provides integrated components for Auth0 FGA development with Claude Code:
 
-1. **MCP Server** - Automatic expert context injection for OpenFGA queries
-2. **FGA Skill** - Comprehensive `/fga` command for model design, testing, and validation
+1. **MCP Server** - Automatic expert context injection for OpenFGA and Auth0 FGA queries
+2. **FGA Skill** - Comprehensive `/fga` command for model design, testing, SDK integration, and demo preparation
+3. **Demo App** (Coming Soon) - Blank canvas Next.js app with Auth0 + FGA + LiteLLM integration
 
-Together, they transform Claude Code into an expert OpenFGA development assistant.
+Together, they transform Claude Code into an expert Auth0 FGA development assistant for sales engineers.
 
 ## 🚀 Quick Start
 
@@ -121,19 +122,32 @@ Then try the FGA skill:
 
 ### MCP Server Features
 
-- **🚨 Automatic Expert Context** - Detects OpenFGA queries and provides mandatory guidance
+- **🚨 Automatic Expert Context** - Detects OpenFGA and Auth0 FGA queries
 - **🔍 Intelligent Pattern Matching** - Recognizes 31+ OpenFGA-specific patterns
-- **📚 600+ Lines of Expert Knowledge** - Comprehensive OpenFGA modeling documentation
+- **📚 1200+ Lines of Expert Knowledge** - Generic OpenFGA + Auth0 FGA specifics
 - **⚡ Zero Configuration** - Works automatically once installed
+- **🏢 Auth0 FGA Support** - CLI commands, SDK patterns, store management
 
 ### FGA Skill Features
 
-- **🎨 Model Design** - Interactive design process with best practices
+- **🎨 Model Design** - Interactive design for customer scenarios
 - **✅ DSL Validation** - Syntax checking and security review
 - **🧪 Test Generation** - Comprehensive `.fga.yaml` test files
 - **🔒 Security Review** - Permission logic verification
 - **⚡ Performance Optimization** - Efficient tuple strategies
 - **🔄 Migration Planning** - Safe model evolution guidance
+- **🏪 Store Management** - Connect to Auth0 FGA stores at dashboard.fga.dev
+- **🚀 SDK Integration** - Code examples for JavaScript, Python, Go, .NET
+- **🎭 Demo Preparation** - Build compelling customer demos
+
+### Demo App Features (Coming Soon)
+
+- **🎨 Blank Canvas** - No hardcoded authorization logic
+- **🔐 Auth0 + FGA** - Authentication + authorization ready
+- **🤖 LiteLLM Chat** - AI agent integration
+- **📦 Generic Helpers** - Reusable FGA functions
+- **📚 Example Patterns** - Reference implementations
+- **🏗️ Claude Code Integration** - Build custom demos with AI assistance
 
 ## 📖 Usage Guide
 
@@ -270,19 +284,22 @@ chmod +x install.sh
 ```
 fga-mcp-skills-quickstart/
 ├── src/
-│   ├── index.ts              # MCP server implementation
-│   ├── prompt-matcher.ts     # Pattern matching engine
-│   └── logger.ts             # Logging system
+│   ├── index.ts                    # MCP server implementation
+│   ├── prompt-matcher.ts           # Pattern matching engine
+│   └── logger.ts                   # Logging system
 ├── prompts/
-│   └── authorization-model.md # OpenFGA expert guidance (600+ lines)
+│   └── authorization-model.md      # OpenFGA + Auth0 FGA guidance (1200+ lines)
 ├── skill/
-│   ├── SKILL.md              # FGA skill implementation
-│   └── reference.md          # Quick reference guide
-├── dist/                     # Compiled JavaScript output
-├── install.sh                # Automated installer (bash/zsh compatible)
-├── CLAUDE-CODE-SETUP.md      # Detailed Claude Code setup guide
-├── README.md                 # Main documentation (this file)
-└── package.json              # Project dependencies
+│   ├── SKILL.md                    # FGA skill for sales engineers (839 lines)
+│   └── reference.md                # Quick reference guide
+├── demo-app/                       # (Coming soon) Next.js + Auth0 + FGA + LiteLLM
+├── dist/                           # Compiled JavaScript output
+├── install.sh                      # Automated installer (bash/zsh compatible)
+├── CLAUDE-CODE-SETUP.md            # Detailed setup guide
+├── DEMO-APP-PLAN.md                # Demo app implementation plan
+├── NEXT-STEPS.md                   # Future enhancements context
+├── README.md                       # Main documentation (this file)
+└── package.json                    # Project dependencies
 ```
 
 ## 🌐 Alternative: Hosted MCP Server
