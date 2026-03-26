@@ -1,27 +1,291 @@
 # OpenFGA Modeling MCP Server
 
-A specialized MCP (Model Context Protocol) server that provides expert-level OpenFGA authorization modeling guidance. Get instant access to comprehensive OpenFGA knowledge directly in VS Code.
+**Created by [Andrés Aguiar](https://github.com/aaguiarz)**
+**Original Repository**: https://github.com/aaguiarz/openfga-modeling-mcp
 
-You can see it in action in [this YouTube video](https://www.youtube.com/watch?v=JNBtf-1NrPM).
+A specialized MCP (Model Context Protocol) server designed for use with **Claude Code CLI**, providing expert-level OpenFGA authorization modeling guidance directly in your terminal. This package includes both the MCP server and a comprehensive FGA skill for building fine-grained authorization systems.
 
-## 🚀 **Quick Start**
+Watch it in action: [YouTube Demo](https://www.youtube.com/watch?v=JNBtf-1NrPM)
 
-**No installation required!** Connect directly to our hosted server:
+## Quick Note
 
-### 1. **Pre-requisites**
+This is a packaged distribution that includes both the MCP server and FGA skill for easy installation. The original MCP server was created by Andrés Aguiar at https://github.com/aaguiarz/openfga-modeling-mcp.
 
-- Enable Copilot in Visual Studio Code.
-- Install the [Visual Studio Code OpenFGA Extension](https://marketplace.visualstudio.com/items?itemName=openfga.openfga-vscode). This will help Copilot validate its output by just monitoring the warnings emitted by the editor.
-- Install the [OpenFGA CLI](https://github.com/openfga/cli). It will let the Agent run tests, verify the output, and fix them if needed.
-    ```
-    brew install openfga/tap/fga
-    ```
-- Enable Agent mode in Copilot. We had better results with Claude Sonnet 4 than with any other LLM.
+## What You Get
 
-### 2. **Configure Your MCP Client**
+This package provides two integrated components for OpenFGA development with Claude Code:
 
-#### VS Code MCP Extensions
-Add this configuration to your VS Code MCP settings, or run the 'MCP Add Server' command and use the `https://mcp.openfga.dev/mcp` URL:
+1. **MCP Server** - Automatic expert context injection for OpenFGA queries
+2. **FGA Skill** - Comprehensive `/fga` command for model design, testing, and validation
+
+Together, they transform Claude Code into an expert OpenFGA development assistant.
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- **Claude Code CLI** installed and configured
+- **Node.js 18+**
+- **OpenFGA CLI** (for testing and validation)
+  ```bash
+  brew install openfga/tap/fga
+  ```
+- **VS Code OpenFGA Extension** (recommended for syntax validation)
+  - [Install from Marketplace](https://marketplace.visualstudio.com/items?itemName=openfga.openfga-vscode)
+
+### Installation
+
+#### Option 1: Automated Install (Recommended)
+
+Works with both bash and zsh:
+
+```bash
+# Clone this repository
+git clone <repository-url>
+cd fga-mcp-skills-quickstart
+
+# Run the automated installer
+chmod +x install.sh
+./install.sh
+```
+
+The install script will:
+- Check prerequisites (Node.js, Claude CLI, FGA CLI)
+- Build the MCP server
+- Register it with Claude Code
+- Install the FGA skill
+- Verify the installation
+
+**Shell Compatibility**: The script works with bash, zsh, fish, and all POSIX-compatible shells. It uses `#!/usr/bin/env bash` so it will automatically run in bash regardless of your default shell. No configuration needed.
+
+#### Option 2: Manual Install
+
+1. **Clone and build the MCP server**
+
+```bash
+# Clone this repository
+git clone <repository-url>
+cd fga-mcp-skills-quickstart
+
+# Build the server
+npm install
+npm run build
+```
+
+2. **Register the MCP server with Claude Code**
+
+```bash
+claude mcp add openfga -- node $(pwd)/dist/index.js
+```
+
+3. **Install the FGA skill**
+
+```bash
+# Copy the skill to Claude Code's skill directory
+cp -r skill ~/.claude/skills/fga
+```
+
+4. **Verify installation**
+
+```bash
+# Check MCP server is registered
+claude mcp list
+
+# Restart Claude Code
+claude
+```
+
+5. **Test it out**
+
+In Claude Code, try:
+```
+What MCP tools do you have available?
+```
+
+You should see `get_context_for_query` and `list_available_contexts` tools.
+
+Then try the FGA skill:
+```
+/fga design an authorization model for a document management system
+```
+
+## 🎯 Key Features
+
+### MCP Server Features
+
+- **🚨 Automatic Expert Context** - Detects OpenFGA queries and provides mandatory guidance
+- **🔍 Intelligent Pattern Matching** - Recognizes 31+ OpenFGA-specific patterns
+- **📚 600+ Lines of Expert Knowledge** - Comprehensive OpenFGA modeling documentation
+- **⚡ Zero Configuration** - Works automatically once installed
+
+### FGA Skill Features
+
+- **🎨 Model Design** - Interactive design process with best practices
+- **✅ DSL Validation** - Syntax checking and security review
+- **🧪 Test Generation** - Comprehensive `.fga.yaml` test files
+- **🔒 Security Review** - Permission logic verification
+- **⚡ Performance Optimization** - Efficient tuple strategies
+- **🔄 Migration Planning** - Safe model evolution guidance
+
+## 📖 Usage Guide
+
+### Using the MCP Server
+
+The MCP server works automatically in the background. When you ask OpenFGA-related questions, it automatically injects expert context. No special commands needed!
+
+**Example queries that trigger automatic context:**
+
+```
+"Create an authorization model for a document management system"
+"How do I model hierarchical permissions in OpenFGA?"
+"What's the difference between direct and computed relations?"
+"Add support for custom roles to my FGA model"
+"Split my model into modular models"
+```
+
+**Trigger patterns include:**
+- Core terms: `openfga`, `zanzibar`, `rebac`, `fga`
+- Concepts: `authorization model`, `relationship tuple`, `permission check`
+- Technical: `openfga dsl`, `openfga schema`, `authorization tuple`
+
+### Using the FGA Skill
+
+Invoke the skill explicitly with `/fga` for structured workflows:
+
+```bash
+# Design a new model
+/fga design an authorization model for [your domain]
+
+# Review existing model
+/fga review my FGA model at ./model.fga
+
+# Generate tests
+/fga write tests for ./authorization-model.fga
+
+# Optimize performance
+/fga optimize my model for better performance
+
+# Security audit
+/fga security review for ./model.fga
+```
+
+The skill provides:
+- Step-by-step guidance through complex modeling tasks
+- Automatic test generation with the FGA CLI
+- Security checklist validation
+- Performance optimization recommendations
+- Common pattern templates
+
+## 🛠️ Development & Testing
+
+### Run in development mode
+
+```bash
+npm run dev
+```
+
+### Enable debug logging
+
+```bash
+LOG_LEVEL=DEBUG npm run dev
+```
+
+### Test the MCP server manually
+
+```bash
+npm test
+# or
+node dist/index.js < /dev/null
+```
+
+### Update the skill
+
+If you modify the skill files in `skill/`, reinstall:
+
+```bash
+cp -r skill ~/.claude/skills/fga
+```
+
+## 🔧 Configuration
+
+### MCP Server Management
+
+```bash
+# List all MCP servers
+claude mcp list
+
+# Get server details
+claude mcp get openfga
+
+# Remove the server
+claude mcp remove openfga
+
+# Re-add with absolute path
+claude mcp add openfga -- node /absolute/path/to/fga-mcp-skills-quickstart/dist/index.js
+```
+
+### Skill Management
+
+The skill is located at `~/.claude/skills/fga/` after installation. To update:
+
+```bash
+cd /path/to/fga-mcp-skills-quickstart
+cp -r skill ~/.claude/skills/fga
+```
+
+## 🛠️ Troubleshooting
+
+### Installation Issues
+
+**"Permission denied" when running install.sh**
+```bash
+chmod +x install.sh
+```
+
+**Script runs but MCP server not appearing**
+1. Verify registration: `claude mcp list`
+2. Fully exit Claude Code: `/exit` then restart with `claude`
+3. Rebuild the server: `npm run build`
+
+**"Node.js version error"**
+- Requires Node.js 18+
+- Check version: `node --version`
+- Update Node.js from https://nodejs.org
+
+**FGA skill not working**
+- Verify installation: `ls -la ~/.claude/skills/fga`
+- Should contain `SKILL.md` and `reference.md`
+- Reinstall: `cp -r skill ~/.claude/skills/fga`
+
+## 🏗️ Project Structure
+
+```
+fga-mcp-skills-quickstart/
+├── src/
+│   ├── index.ts              # MCP server implementation
+│   ├── prompt-matcher.ts     # Pattern matching engine
+│   └── logger.ts             # Logging system
+├── prompts/
+│   └── authorization-model.md # OpenFGA expert guidance (600+ lines)
+├── skill/
+│   ├── SKILL.md              # FGA skill implementation
+│   └── reference.md          # Quick reference guide
+├── dist/                     # Compiled JavaScript output
+├── install.sh                # Automated installer (bash/zsh compatible)
+├── CLAUDE-CODE-SETUP.md      # Detailed Claude Code setup guide
+├── README.md                 # Main documentation (this file)
+└── package.json              # Project dependencies
+```
+
+## 🌐 Alternative: Hosted MCP Server
+
+If you prefer not to run locally, you can use the hosted version:
+
+**Production URL**: https://mcp.openfga.dev
+**MCP Endpoint**: https://mcp.openfga.dev/mcp
+**Health Check**: https://mcp.openfga.dev/health
+
+### Configure for VS Code MCP Extensions
 
 ```json
 {
@@ -35,152 +299,93 @@ Add this configuration to your VS Code MCP settings, or run the 'MCP Add Server'
 }
 ```
 
-### 3. **Start Using**
+**Note**: The hosted version only provides the MCP server. You'll still need to install the FGA skill locally for the `/fga` command.
 
-Some possible prompts:
+## 📚 Available MCP Tools
 
-```
-"Create an authorization model for a document management system"
-"Create an authorization model for <Company Name>"
-"Create an authorization model for <Website>"
-"Add support for custom roles"
-"Add support for temporary access at the document level"
-"Split the model in modular models"
-```
+### `get_context_for_query`
 
-The server automatically provides expert context - no `@mcp` calls needed!
-
-## 🎯 **Key Features**
-
-- **🚨 OpenFGA Expert Context**: Mandatory guidance for all authorization modeling questions
-- **🔍 Intelligent Detection**: Automatically recognizes 31+ OpenFGA-specific patterns
-- **📚 Expert Knowledge**: 600+ lines of comprehensive OpenFGA modeling documentation
-- **🔧 VS Code Native**: Seamless GitHub Copilot integration
-
-## MCP Server Hosting
-
-- **Production URL**: https://mcp.openfga.dev
-- **MCP Endpoint**: https://omcp.openfga.dev/mcp
-- **Health Check**: https://mcp.openfga.dev/health
-- **Protocol**: MCP Streamable HTTP (2025-03-26)
-
-
-### Test Connection
-```bash
-# Health check
-curl https://mcp.openfga.dev/health
-
-# MCP endpoint test
-curl -H "Accept: text/event-stream" \
-     https://mcp.openfga.dev/mcp
-```
-
-## **Automatic OpenFGA Detection**
-
-The server automatically triggers expert context for queries containing:
-
-### Core OpenFGA Terms
-- `openfga`, `zanzibar`, `rebac`, `fga`
-- `authorization model`, `auth model`, `access control`
-- `relationship tuple`, `user relation object`
-- `permission check`, `can user`, `access check`
-
-### Authorization Concepts  
-- `rbac`, `abac`, `permission`, `role based`
-- `attribute based`, `fine grained access control`
-- `relationship based access control`
-
-### Technical Implementation
-- `openfga dsl`, `openfga schema`, `openfga relations`
-- `openfga types`, `authorization tuple`
-
-## �️ **Available Tools**
-
-### 1. `get_context_for_query`
 Analyzes queries and returns relevant OpenFGA context.
 
 **Parameters:**
 - `query` (string): The query to analyze for OpenFGA patterns
 
-**Example queries:**
-- "Create an authorization model for a document management system"
-- "Add support for customer roles at the organization level"
-- "Split the model in modules"
-- "Add support for temporal access for documents"
-
-### 2. `list_available_contexts`
-Lists all available OpenFGA context prompts and their trigger patterns.
-
-## 📚 **Supported Context Areas**
-
-1. **Authorization Model Design** - Complete guidance for creating OpenFGA models, DSL syntax, and type definitions
-2. **Relationship Modeling** - Expert patterns for defining user-object relationships and permissions
-3. **Zanzibar Concepts** - Deep understanding of Google's Zanzibar paper and ReBAC principles
-4. **Testing & Validation** - Best practices for testing authorization models and relationship tuples
-
-## 🏗️ **Local Development (Optional)**
-
-If you want to run locally or contribute:
-
-```bash
-# Clone and setup
-git clone https://github.com/aaguiarz/openfga-modeling-mcp.git
-cd openfga-modeling-mcp
-npm install
-npm run build
-
-# Development mode
-npm run dev
-
-# Enable debug logging
-LOG_LEVEL=DEBUG npm run dev
-```
-
-### Local VS Code Configuration
+**Example:**
 ```json
 {
-  "mcpServers": {
-    "openfga-context": {
-      "command": "node",
-      "args": ["dist/index.js"],
-      "cwd": "/absolute/path/to/openfga-modeling-mcp"
-    }
-  }
+  "query": "Create an authorization model for a document management system"
 }
 ```
 
-## 🔬 **Technical Details**
+### `list_available_contexts`
 
-- **Framework**: Model Context Protocol (MCP) SDK
+Lists all available OpenFGA context prompts and their trigger patterns.
+
+**Example:**
+```json
+{}
+```
+
+## 🎓 Learning Resources
+
+The package includes comprehensive documentation:
+
+- **`skill/SKILL.md`** - Complete FGA skill guide with workflows and patterns
+- **`skill/reference.md`** - Quick reference for OpenFGA DSL syntax
+- **`prompts/authorization-model.md`** - Deep-dive expert guidance (600+ lines)
+
+External resources:
+- [OpenFGA Documentation](https://openfga.dev)
+- [Model Context Protocol](https://modelcontextprotocol.io)
+- [Zanzibar Paper](https://research.google/pubs/pub48190/)
+- [OpenFGA Playground](https://play.openfga.dev)
+- [Sample Models](https://github.com/openfga/sample-stores)
+
+## 🔬 Technical Details
+
+- **Framework**: Model Context Protocol (MCP) SDK v1.17.1
 - **Language**: TypeScript with ES2022 target
-- **Transport**: HTTP for production, STDIO for local development
+- **Transport**: STDIO for Claude Code CLI, HTTP for production hosting
 - **Pattern Engine**: Custom rule-based OpenFGA query matching
 - **Logging**: Structured logging with performance metrics
 
-### Project Structure
-```
-openfga-modeling-mcp/
-├── src/
-│   ├── index.ts              # Main MCP server implementation
-│   ├── prompt-matcher.ts     # OpenFGA pattern matching engine
-│   └── logger.ts             # Comprehensive logging system
-├── prompts/
-│   └── authorization-model.md # OpenFGA expert guidance (600+ lines)
-├── dist/                     # Compiled JavaScript output
-└── package.json              # Project dependencies and scripts
-```
+### Transport Modes
 
-## 📄 **License**
+The server automatically selects transport based on environment:
 
-MIT License - see LICENSE file for details
+- **STDIO Mode** (no `PORT` env var) - For Claude Code CLI
+- **HTTP Mode** (`PORT` set) - For production/Railway deployment
 
-## 🔗 **Related Resources**
+## 🤝 Contributing
 
-- [OpenFGA Documentation](https://openfga.dev)
-- [Model Context Protocol](https://modelcontextprotocol.io)
-- [VS Code MCP Extensions](https://marketplace.visualstudio.com/search?term=mcp)
-- [Zanzibar Paper](https://research.google/pubs/pub48190/)
+Contributions welcome! This project was created by Andrés Aguiar.
+
+**Original Repository**: https://github.com/aaguiarz/openfga-modeling-mcp
+
+To contribute:
+
+1. Fork the [original repository](https://github.com/aaguiarz/openfga-modeling-mcp)
+2. Create a feature branch
+3. Make your changes
+4. Test locally with Claude Code
+5. Submit a pull request to the original repo
+
+## 📄 License
+
+MIT License - Copyright (c) 2025 Andrés Aguiar
+
+See [LICENSE](LICENSE) file for full details.
+
+## 🙏 Credits
+
+**Original Author**: [Andrés Aguiar](https://github.com/aaguiarz)
+
+This MCP server and FGA skill provide expert OpenFGA guidance based on:
+- Official OpenFGA documentation
+- Google's Zanzibar paper
+- Real-world ReBAC implementation patterns
+- Community best practices
 
 ---
 
-**🚨 Note**: This MCP server is exclusively designed for OpenFGA authorization modeling workflows and automatically provides expert guidance for all OpenFGA, Zanzibar, and ReBAC development questions.
+**Ready to build fine-grained authorization systems?** Install the MCP server and FGA skill to get started with expert OpenFGA guidance in Claude Code!

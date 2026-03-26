@@ -1,5 +1,10 @@
 import { promises as fs } from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export interface PromptRule {
   patterns: string[];
@@ -81,11 +86,13 @@ export class PromptMatcher {
    * Load prompt content from file
    */
   public async loadPromptContent(promptFile: string): Promise<string> {
-    const promptsDir = path.join(process.cwd(), 'prompts');
+    // Use the MCP server's installation directory, not the current working directory
+    // __dirname points to dist/, so go up one level to reach the prompts/ directory
+    const promptsDir = path.join(__dirname, '..', 'prompts');
     const filePath = path.join(promptsDir, promptFile);
-    
+
     console.error(`[DEBUG] Loading prompt file: ${filePath}`);
-    
+
     try {
       const content = await fs.readFile(filePath, 'utf-8');
       console.error(`[DEBUG] Successfully loaded prompt file: ${promptFile} (${content.length} chars)`);

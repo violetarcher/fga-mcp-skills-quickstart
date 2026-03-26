@@ -1,5 +1,5 @@
 {
-  "name": "openfga-modeling-mcp-server",
+  "name": "fga-mcp-skills-quickstart",
   "version": "1.0.0",
   "description": "A specialized MCP server providing expert OpenFGA authorization modeling guidance and context",
   "main": "dist/index.js",
@@ -22,7 +22,7 @@
     "access-control",
     "modeling"
   ],
-  "author": "",
+  "author": "Andrés Aguiar",
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.1"
