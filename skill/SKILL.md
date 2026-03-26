@@ -37,6 +37,7 @@ When invoked with `/fga`, you provide expert guidance on:
 5. **Test Generation** - Comprehensive `.fga.yaml` test files
 6. **Demo Preparation** - Build compelling authorization demos
 7. **Customer Scenarios** - Map real business needs to FGA models
+8. **Demo App Setup** - Build working Next.js + Auth0 + FGA applications
 
 ## Typical Workflows for Sales Engineers
 
@@ -427,6 +428,174 @@ When invoked with `/fga`, you provide expert guidance on:
 
 5. **Create a demo repo/script**: Generate working code they can try
 
+### 9. Setup Demo Application with Auth0 + FGA
+
+**User asks:** "Set up a demo app" or "Build a working demo" or "Create a Next.js demo"
+
+**Your process:**
+1. **Check prerequisites**:
+   - Node.js 18+
+   - Auth0 account
+   - Auth0 FGA store created
+   - FGA CLI installed
+
+2. **Choose demo scenario**:
+   - Multi-tenant SaaS
+   - Document management
+   - Healthcare (HIPAA)
+   - Financial (SOX/PCI)
+   - Custom customer scenario
+
+3. **Set up Next.js with Auth0 authentication**:
+   ```bash
+   # Clone Auth0 Next.js quickstart
+   npx create-next-app@latest my-fga-demo --typescript --tailwind --app
+   cd my-fga-demo
+
+   # Install Auth0 SDK
+   npm install @auth0/nextjs-auth0
+
+   # Install FGA SDK
+   npm install @auth0/fga
+   ```
+
+4. **Configure Auth0 authentication**:
+   - Create `.env.local` with Auth0 credentials:
+   ```bash
+   AUTH0_SECRET='<generate-random-secret>'
+   AUTH0_BASE_URL='http://localhost:3000'
+   AUTH0_ISSUER_BASE_URL='https://<your-tenant>.auth0.com'
+   AUTH0_CLIENT_ID='<your-client-id>'
+   AUTH0_CLIENT_SECRET='<your-client-secret>'
+   ```
+
+5. **Configure FGA connection**:
+   - Add to `.env.local`:
+   ```bash
+   FGA_API_URL='https://api.us1.fga.dev'
+   FGA_STORE_ID='<your-store-id>'
+   FGA_API_TOKEN='<your-api-token>'
+   ```
+
+6. **Create FGA client wrapper**:
+   ```typescript
+   // lib/fga.ts
+   import { FGA } from '@auth0/fga';
+
+   export const fga = new FGA({
+     apiUrl: process.env.FGA_API_URL!,
+     storeId: process.env.FGA_STORE_ID!,
+     apiToken: process.env.FGA_API_TOKEN!,
+   });
+
+   export async function checkPermission(
+     userId: string,
+     relation: string,
+     object: string
+   ): Promise<boolean> {
+     const { allowed } = await fga.check({
+       user: `user:${userId}`,
+       relation,
+       object
+     });
+     return allowed;
+   }
+   ```
+
+7. **Deploy the authorization model**:
+   ```bash
+   # Write model to store
+   fga model write --store-id <store-id> --file demo-model.fga
+   ```
+
+8. **Create demo data (tuples)**:
+   ```bash
+   # Write demo relationships
+   fga tuple write --store-id <store-id> --file demo-tuples.json
+   ```
+
+9. **Add authorization middleware**:
+   ```typescript
+   // middleware.ts
+   import { NextResponse } from 'next/server';
+   import type { NextRequest } from 'next/server';
+   import { getSession } from '@auth0/nextjs-auth0/edge';
+   import { checkPermission } from './lib/fga';
+
+   export async function middleware(request: NextRequest) {
+     const session = await getSession();
+     if (!session?.user) {
+       return NextResponse.redirect(new URL('/api/auth/login', request.url));
+     }
+
+     // Check FGA permission
+     const allowed = await checkPermission(
+       session.user.sub,
+       'can_view',
+       'workspace:demo'
+     );
+
+     if (!allowed) {
+       return NextResponse.redirect(new URL('/forbidden', request.url));
+     }
+
+     return NextResponse.next();
+   }
+
+   export const config = {
+     matcher: '/protected/:path*',
+   };
+   ```
+
+10. **Create protected page example**:
+    ```typescript
+    // app/protected/page.tsx
+    import { getSession } from '@auth0/nextjs-auth0';
+    import { checkPermission } from '@/lib/fga';
+
+    export default async function ProtectedPage() {
+      const session = await getSession();
+      const userId = session?.user.sub;
+
+      const canEdit = await checkPermission(userId, 'can_edit', 'document:demo');
+
+      return (
+        <div>
+          <h1>Protected Resource</h1>
+          <p>Welcome, {session?.user.name}</p>
+          {canEdit ? (
+            <button>Edit Document</button>
+          ) : (
+            <p>View-only access</p>
+          )}
+        </div>
+      );
+    }
+    ```
+
+11. **Test the demo**:
+    ```bash
+    npm run dev
+    # Visit http://localhost:3000
+    # Log in with Auth0
+    # See permissions in action
+    ```
+
+12. **Prepare demo walkthrough**:
+    - Show the authorization model in dashboard.fga.dev
+    - Log in as different users (alice, bob)
+    - Demonstrate different permission levels
+    - Show how permissions change when tuples are modified
+    - Explain the FGA integration code
+    - Highlight zero code changes needed for permission updates
+
+**Demo Talking Points**:
+- "Authentication (who you are) comes from Auth0"
+- "Authorization (what you can do) comes from Auth0 FGA"
+- "Permissions are external to your code"
+- "Update permissions without redeploying your app"
+- "Same authorization logic across all microservices"
+
 ## Auth0 FGA CLI Quick Reference
 
 ### Configuration
@@ -454,6 +623,9 @@ fga model write --store-id <store-id> --file model.fga
 
 # Validate model syntax
 fga model validate --file model.fga
+
+# Transform JSON model to DSL
+fga model transform --file model.json
 
 # List all model versions
 fga model list --store-id <store-id>
@@ -541,6 +713,28 @@ condition non_expired_grant(current_time: timestamp, grant_time: timestamp, gran
 - **Use customer's terminology**: "patient", "case", "transaction" not generic "resource"
 - **Show value quickly**: Demonstrate complex permission in simple DSL
 - **Explain the "why"**: Connect model to business requirements
+
+### Naming Conventions
+Follow these conventions for clarity and consistency:
+
+**Object Types** (Singular Nouns):
+- ✅ `user`, `document`, `folder`, `organization`, `project`
+- ❌ `users`, `docs`, `orgs` (avoid plurals and abbreviations)
+
+**Relations** (Present Tense Verbs or Nouns):
+- ✅ `owner`, `viewer`, `editor`, `member`, `admin`, `parent`
+- ❌ `owns`, `viewing`, `owned_by` (avoid past tense or verb forms)
+
+**Permissions** (Prefixed with `can_`):
+- ✅ `can_read`, `can_write`, `can_share`, `can_delete`, `can_approve`
+- ❌ `read`, `write`, `delete` (use `can_` prefix for actions)
+
+### Performance Optimization
+- **Minimize relation depth**: Avoid deeply nested `from` chains (>3 levels)
+- **Use usersets for groups**: `team#member` instead of individual user tuples
+- **Denormalize when needed**: Cache frequently checked permissions
+- **Batch operations**: Use bulk tuple writes instead of individual writes
+- **Consider list_objects**: More efficient than checking each object individually
 
 ### Demo Techniques
 - **Live model changes**: Show updating model without code changes
