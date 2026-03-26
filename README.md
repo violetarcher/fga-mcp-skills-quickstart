@@ -9,7 +9,7 @@ Watch it in action: [YouTube Demo](https://www.youtube.com/watch?v=JNBtf-1NrPM)
 
 ## Quick Note
 
-This is a packaged distribution that includes both the MCP server and FGA skill for easy installation. The original MCP server was created by Andrés Aguiar at https://github.com/aaguiarz/openfga-modeling-mcp.
+This is a packaged distribution that includes both the MCP server and FGA skill for easy installation with Claude Code. The original MCP server was created by Andrés Aguiar at https://github.com/aaguiarz/openfga-modeling-mcp.
 
 ## What You Get
 
@@ -41,7 +41,7 @@ Works with both bash and zsh:
 
 ```bash
 # Clone this repository
-git clone <repository-url>
+git clone https://github.com/violetarcher/fga-mcp-skills-quickstart.git
 cd fga-mcp-skills-quickstart
 
 # Run the automated installer
@@ -64,7 +64,7 @@ The install script will:
 
 ```bash
 # Clone this repository
-git clone <repository-url>
+git clone https://github.com/violetarcher/fga-mcp-skills-quickstart.git
 cd fga-mcp-skills-quickstart
 
 # Build the server
@@ -74,9 +74,17 @@ npm run build
 
 2. **Register the MCP server with Claude Code**
 
+This tells Claude Code to run the MCP server automatically:
+
 ```bash
+# Register with the current directory's path
 claude mcp add openfga -- node $(pwd)/dist/index.js
 ```
+
+What this does:
+- `claude mcp add openfga` - Registers a server named "openfga"
+- `--` - Separator between server name and command
+- `node $(pwd)/dist/index.js` - Command to start the server ($(pwd) expands to absolute path)
 
 3. **Install the FGA skill**
 

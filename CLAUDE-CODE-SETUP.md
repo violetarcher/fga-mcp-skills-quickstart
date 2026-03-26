@@ -8,7 +8,7 @@ Complete guide for installing and configuring the Auth0 FGA MCP Server and FGA S
 
 ## Quick Note
 
-This is a packaged distribution for **Auth0 FGA (Okta FGA)** - the fully managed hosted service at **dashboard.fga.dev**. This includes both the MCP server and an enhanced FGA skill for working with Auth0 FGA stores. The original MCP server was created by Andrés Aguiar. This guide uses generic repository URLs - replace `<repository-url>` with the actual URL where you obtained this package.
+This is a packaged distribution for **Auth0 FGA (Okta FGA)** - the fully managed hosted service at **dashboard.fga.dev**. This includes both the MCP server and an enhanced FGA skill for working with Auth0 FGA stores. The original MCP server was created by Andrés Aguiar.
 
 ## What You're Installing
 
@@ -50,7 +50,7 @@ The automated installer works with **all shells** (bash, zsh, fish, etc.):
 
 ```bash
 # Clone this repository
-git clone <repository-url>
+git clone https://github.com/violetarcher/fga-mcp-skills-quickstart.git
 cd fga-mcp-skills-quickstart
 
 # Make the installer executable and run it
@@ -73,7 +73,7 @@ If you prefer to install manually or the automated script fails:
 
 ```bash
 # Clone this repository
-git clone <repository-url>
+git clone https://github.com/violetarcher/fga-mcp-skills-quickstart.git
 cd fga-mcp-skills-quickstart
 
 # Build the server
