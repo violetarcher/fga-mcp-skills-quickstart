@@ -110,11 +110,11 @@ This tells Claude Code to run the MCP server automatically:
 
 ```bash
 # Register with the current directory's path
-claude mcp add openfga -- node $(pwd)/dist/index.js
+claude mcp add fga -- node $(pwd)/dist/index.js
 ```
 
 What this does:
-- `claude mcp add openfga` - Registers a server named "openfga"
+- `claude mcp add fga` - Registers a server named "fga"
 - `--` - Separator between server name and command
 - `node $(pwd)/dist/index.js` - Command to start the server ($(pwd) expands to absolute path)
 
@@ -268,13 +268,13 @@ cp -r skill ~/.claude/skills/fga
 claude mcp list
 
 # Get server details
-claude mcp get openfga
+claude mcp get fga
 
 # Remove the server
-claude mcp remove openfga
+claude mcp remove fga
 
 # Re-add with absolute path
-claude mcp add openfga -- node /absolute/path/to/fga-mcp-skills-quickstart/dist/index.js
+claude mcp add fga -- node /absolute/path/to/fga-mcp-skills-quickstart/dist/index.js
 ```
 
 ### Skill Management

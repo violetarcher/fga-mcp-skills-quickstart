@@ -90,12 +90,12 @@ ls dist/index.js  # Should exist
 
 ```bash
 # Register the MCP server (use absolute path)
-claude mcp add openfga -- node $(pwd)/dist/index.js
+claude mcp add fga -- node $(pwd)/dist/index.js
 ```
 
 Or with an explicit absolute path:
 ```bash
-claude mcp add openfga -- node /absolute/path/to/fga-mcp-skills-quickstart/dist/index.js
+claude mcp add fga -- node /absolute/path/to/fga-mcp-skills-quickstart/dist/index.js
 ```
 
 Verify registration:
@@ -205,13 +205,13 @@ The FGA skill is installed at:
 claude mcp list
 
 # Get details about the OpenFGA server
-claude mcp get openfga
+claude mcp get fga
 
 # Remove the server
-claude mcp remove openfga
+claude mcp remove fga
 
 # Re-add the server
-claude mcp add openfga -- node /path/to/dist/index.js
+claude mcp add fga -- node /path/to/dist/index.js
 ```
 
 ### FGA Skill
@@ -255,8 +255,8 @@ rm -rf ~/.claude/skills/fga
 4. Rebuild and re-register:
    ```bash
    npm run build
-   claude mcp remove openfga
-   claude mcp add openfga -- node $(pwd)/dist/index.js
+   claude mcp remove fga
+   claude mcp add fga -- node $(pwd)/dist/index.js
    ```
 
 ### FGA Skill Not Working

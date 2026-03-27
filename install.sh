@@ -107,7 +107,7 @@ if claude mcp list 2>/dev/null | grep -q "openfga"; then
     echo ""
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         echo "  Removing existing registration..."
-        claude mcp remove openfga
+        claude mcp remove fga
     else
         echo "  Skipping MCP server registration"
         echo ""
@@ -117,7 +117,7 @@ fi
 
 if [ "$MCP_SKIPPED" != "true" ]; then
     echo "  Registering server..."
-    claude mcp add openfga -- node "$SCRIPT_DIR/dist/index.js"
+    claude mcp add fga -- node "$SCRIPT_DIR/dist/index.js"
 
     # Verify registration
     if claude mcp list | grep -q "openfga"; then
