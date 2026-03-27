@@ -116,11 +116,11 @@ if claude mcp list 2>/dev/null | grep -q "openfga"; then
 fi
 
 if [ "$MCP_SKIPPED" != "true" ]; then
-    echo "  Registering server..."
-    claude mcp add fga -- node "$SCRIPT_DIR/dist/index.js"
+    echo "  Registering server globally..."
+    claude mcp add --scope user fga -- node "$SCRIPT_DIR/dist/index.js"
 
     # Verify registration
-    if claude mcp list | grep -q "openfga"; then
+    if claude mcp list | grep -q "fga"; then
         echo -e "${GREEN}✓ MCP Server registered successfully${NC}"
     else
         echo -e "${RED}✗ MCP Server registration failed${NC}"
