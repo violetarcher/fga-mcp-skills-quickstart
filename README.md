@@ -21,6 +21,33 @@ This package provides integrated components for Auth0 FGA development with Claud
 
 Together, they transform Claude Code into an expert Auth0 FGA development assistant for sales engineers.
 
+## 🏗️ Architecture: How They Work Together
+
+### MCP Server vs FGA Skill
+
+| Aspect | MCP Server | FGA Skill |
+|--------|-----------|-----------|
+| **Activation** | Automatic (passive) | Manual `/fga` (active) |
+| **Purpose** | Knowledge injection | Task execution |
+| **User Action** | Just ask questions | Invoke explicit command |
+| **Output** | Context for Claude | Concrete actions (files, CLI commands) |
+| **Workflow** | Single-step (context lookup) | Multi-step (guided process) |
+| **When Used** | Every OpenFGA question | Specific sales engineering tasks |
+
+### Example Workflow
+
+1. **You ask:** "Design a document management authorization model"
+2. **MCP server** automatically provides OpenFGA best practices to Claude (invisible to you)
+3. **You invoke:** `/fga design a document management model`
+4. **Skill** uses the MCP-provided context and executes workflow:
+   - Asks about requirements
+   - Designs model with best practices
+   - Validates DSL syntax
+   - Generates test files
+   - Offers to deploy to Auth0 FGA store
+
+**In short:** The MCP server makes Claude an OpenFGA expert. The skill turns that expertise into actionable sales engineering workflows.
+
 ## 🚀 Quick Start
 
 ### Prerequisites
