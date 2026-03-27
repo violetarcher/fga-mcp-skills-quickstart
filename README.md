@@ -329,30 +329,6 @@ fga-mcp-skills-quickstart/
 └── package.json                    # Project dependencies
 ```
 
-## 🌐 Alternative: Hosted MCP Server
-
-If you prefer not to run locally, you can use the hosted version:
-
-**Production URL**: https://mcp.openfga.dev
-**MCP Endpoint**: https://mcp.openfga.dev/mcp
-**Health Check**: https://mcp.openfga.dev/health
-
-### Configure for VS Code MCP Extensions
-
-```json
-{
-  "mcpServers": {
-    "openfga-mcp": {
-      "url": "https://mcp.openfga.dev/mcp",
-      "type": "http",
-      "description": "OpenFGA Authorization Model Context Provider"
-    }
-  }
-}
-```
-
-**Note**: The hosted version only provides the MCP server. You'll still need to install the FGA skill locally for the `/fga` command.
-
 ## 📚 Available MCP Tools
 
 ### `get_context_for_query`

@@ -357,32 +357,6 @@ LOG_LEVEL=DEBUG npm run dev
 npm run watch
 ```
 
-## Alternative: Hosted MCP Server
-
-If you prefer not to run the server locally, you can use the hosted version at:
-- **MCP Endpoint**: https://mcp.openfga.dev/mcp
-- **Health Check**: https://mcp.openfga.dev/health
-
-**Note**: The hosted version only provides the MCP server. You'll still need to install the FGA skill locally for the `/fga` command.
-
-### Configure Hosted Server (VS Code MCP Extensions)
-
-For VS Code MCP extensions, use:
-
-```json
-{
-  "mcpServers": {
-    "openfga-mcp": {
-      "url": "https://mcp.openfga.dev/mcp",
-      "type": "http",
-      "description": "OpenFGA Authorization Model Context Provider"
-    }
-  }
-}
-```
-
-**This is NOT for Claude Code CLI** - Claude Code CLI uses `claude mcp add` commands, not JSON configuration.
-
 ## Usage Examples
 
 ### Using the MCP Server (Automatic)
