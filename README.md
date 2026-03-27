@@ -1,15 +1,19 @@
 # OpenFGA Modeling MCP Server
 
-**Created by [Andrés Aguiar](https://github.com/aaguiarz)**
-**Original Repository**: https://github.com/aaguiarz/openfga-modeling-mcp
-
 A specialized MCP (Model Context Protocol) server designed for use with **Claude Code CLI**, providing expert-level OpenFGA authorization modeling guidance directly in your terminal. This package includes both the MCP server and a comprehensive FGA skill for building fine-grained authorization systems.
 
 Watch it in action: [YouTube Demo](https://www.youtube.com/watch?v=JNBtf-1NrPM)
 
-## Quick Note
+## Credits & Attribution
 
-This is a packaged distribution that includes both the MCP server and FGA skill for easy installation with Claude Code. The original MCP server was created by Andrés Aguiar at https://github.com/aaguiarz/openfga-modeling-mcp.
+This is a packaged distribution that includes both the MCP server and FGA skill for easy installation with Claude Code. The original MCP server was created by **[Andrés Aguiar](https://github.com/aaguiarz)** at https://github.com/aaguiarz/openfga-modeling-mcp.
+
+This enhanced version provides expert OpenFGA guidance based on:
+- Official OpenFGA documentation
+- Google's Zanzibar paper
+- Real-world ReBAC implementation patterns
+- Auth0 FGA (Okta FGA) best practices
+- Community best practices
 
 ## What You Get
 
@@ -358,9 +362,9 @@ Lists all available OpenFGA context prompts and their trigger patterns.
 
 The package includes comprehensive documentation:
 
-- **`skill/SKILL.md`** - Complete FGA skill guide with workflows and patterns
+- **`skill/SKILL.md`** - Complete FGA skill guide with workflows and patterns (839 lines)
 - **`skill/reference.md`** - Quick reference for OpenFGA DSL syntax
-- **`prompts/authorization-model.md`** - Deep-dive expert guidance (600+ lines)
+- **`prompts/authorization-model.md`** - Deep-dive expert guidance (1,262 lines: OpenFGA + Auth0 FGA)
 
 External resources:
 - [OpenFGA Documentation](https://openfga.dev)
@@ -373,46 +377,28 @@ External resources:
 
 - **Framework**: Model Context Protocol (MCP) SDK v1.17.1
 - **Language**: TypeScript with ES2022 target
-- **Transport**: STDIO for Claude Code CLI, HTTP for production hosting
-- **Pattern Engine**: Custom rule-based OpenFGA query matching
+- **Transport**: STDIO for Claude Code CLI
+- **Pattern Engine**: Custom rule-based OpenFGA query matching (30+ patterns)
+- **Context Library**: 1,262 lines of expert OpenFGA + Auth0 FGA guidance
 - **Logging**: Structured logging with performance metrics
-
-### Transport Modes
-
-The server automatically selects transport based on environment:
-
-- **STDIO Mode** (no `PORT` env var) - For Claude Code CLI
-- **HTTP Mode** (`PORT` set) - For production/Railway deployment
 
 ## 🤝 Contributing
 
-Contributions welcome! This project was created by Andrés Aguiar.
+Contributions welcome! To contribute:
 
-**Original Repository**: https://github.com/aaguiarz/openfga-modeling-mcp
-
-To contribute:
-
-1. Fork the [original repository](https://github.com/aaguiarz/openfga-modeling-mcp)
+1. Fork this repository at https://github.com/violetarcher/fga-mcp-skills-quickstart
 2. Create a feature branch
 3. Make your changes
 4. Test locally with Claude Code
-5. Submit a pull request to the original repo
+5. Submit a pull request
+
+For the original MCP server, see [Andrés Aguiar's repository](https://github.com/aaguiarz/openfga-modeling-mcp).
 
 ## 📄 License
 
 MIT License - Copyright (c) 2025 Andrés Aguiar
 
 See [LICENSE](LICENSE) file for full details.
-
-## 🙏 Credits
-
-**Original Author**: [Andrés Aguiar](https://github.com/aaguiarz)
-
-This MCP server and FGA skill provide expert OpenFGA guidance based on:
-- Official OpenFGA documentation
-- Google's Zanzibar paper
-- Real-world ReBAC implementation patterns
-- Community best practices
 
 ---
 
