@@ -1,6 +1,6 @@
-# OpenFGA Modeling MCP Server
+# FGA Modeling MCP Server
 
-A specialized MCP (Model Context Protocol) server designed for use with **Claude Code CLI**, providing expert-level OpenFGA authorization modeling guidance directly in your terminal. This package includes both the MCP server and a comprehensive FGA skill for building fine-grained authorization systems.
+A specialized MCP (Model Context Protocol) server designed for use with **Claude Code CLI**, providing expert-level FGA authorization modeling guidance directly in your terminal. This package includes both the MCP server and a comprehensive FGA skill for building fine-grained authorization systems.
 
 Watch it in action: [YouTube Demo](https://www.youtube.com/watch?v=JNBtf-1NrPM)
 
@@ -8,8 +8,8 @@ Watch it in action: [YouTube Demo](https://www.youtube.com/watch?v=JNBtf-1NrPM)
 
 This is a packaged distribution that includes both the MCP server and FGA skill for easy installation with Claude Code. The original MCP server was created by **[Andrés Aguiar](https://github.com/aaguiarz)** at https://github.com/aaguiarz/openfga-modeling-mcp.
 
-This enhanced version provides expert OpenFGA guidance based on:
-- Official OpenFGA documentation
+This enhanced version provides expert FGA guidance based on:
+- Official FGA documentation
 - Google's Zanzibar paper
 - Real-world ReBAC implementation patterns
 - Auth0 FGA (Okta FGA) best practices
@@ -19,7 +19,7 @@ This enhanced version provides expert OpenFGA guidance based on:
 
 This package provides integrated components for Auth0 FGA development with Claude Code:
 
-1. **MCP Server** - Automatic expert context injection for OpenFGA and Auth0 FGA queries
+1. **MCP Server** - Automatic expert context injection for FGA queries
 2. **FGA Skill** - Comprehensive `/fga` command for model design, testing, SDK integration, and demo preparation
 3. **Demo App** (Coming Soon) - Blank canvas Next.js app with Auth0 + FGA + LiteLLM integration
 
@@ -36,12 +36,12 @@ Together, they transform Claude Code into an expert Auth0 FGA development assist
 | **User Action** | Just ask questions | Invoke explicit command |
 | **Output** | Context for Claude | Concrete actions (files, CLI commands) |
 | **Workflow** | Single-step (context lookup) | Multi-step (guided process) |
-| **When Used** | Every OpenFGA question | Specific sales engineering tasks |
+| **When Used** | Every FGA question | Specific sales engineering tasks |
 
 ### Example Workflow
 
 1. **You ask:** "Design a document management authorization model"
-2. **MCP server** automatically provides OpenFGA best practices to Claude (invisible to you)
+2. **MCP server** automatically provides FGA best practices to Claude (invisible to you)
 3. **You invoke:** `/fga design a document management model`
 4. **Skill** uses the MCP-provided context and executes workflow:
    - Asks about requirements
@@ -50,7 +50,7 @@ Together, they transform Claude Code into an expert Auth0 FGA development assist
    - Generates test files
    - Offers to deploy to Auth0 FGA store
 
-**In short:** The MCP server makes Claude an OpenFGA expert. The skill turns that expertise into actionable sales engineering workflows.
+**In short:** The MCP server makes Claude an FGA expert. The skill turns that expertise into actionable sales engineering workflows.
 
 ## 🚀 Quick Start
 
@@ -58,7 +58,7 @@ Together, they transform Claude Code into an expert Auth0 FGA development assist
 
 - **Claude Code CLI** installed and configured
 - **Node.js 18+**
-- **OpenFGA CLI** (for testing and validation)
+- **FGA CLI** (for testing and validation)
   ```bash
   brew install openfga/tap/fga
   ```
@@ -153,9 +153,9 @@ Then try the FGA skill:
 
 ### MCP Server Features
 
-- **🚨 Automatic Expert Context** - Detects OpenFGA and Auth0 FGA queries
-- **🔍 Intelligent Pattern Matching** - Recognizes 31+ OpenFGA-specific patterns
-- **📚 1200+ Lines of Expert Knowledge** - Generic OpenFGA + Auth0 FGA specifics
+- **🚨 Automatic Expert Context** - Detects FGA queries
+- **🔍 Intelligent Pattern Matching** - Recognizes 31+ FGA-specific patterns
+- **📚 1200+ Lines of Expert Knowledge** - Covers both OpenFGA and Auth0 FGA
 - **⚡ Zero Configuration** - Works automatically once installed
 - **🏢 Auth0 FGA Support** - CLI commands, SDK patterns, store management
 
@@ -184,13 +184,13 @@ Then try the FGA skill:
 
 ### Using the MCP Server
 
-The MCP server works automatically in the background. When you ask OpenFGA-related questions, it automatically injects expert context. No special commands needed!
+The MCP server works automatically in the background. When you ask FGA-related questions, it automatically injects expert context. No special commands needed!
 
 **Example queries that trigger automatic context:**
 
 ```
 "Create an authorization model for a document management system"
-"How do I model hierarchical permissions in OpenFGA?"
+"How do I model hierarchical permissions in FGA?"
 "What's the difference between direct and computed relations?"
 "Add support for custom roles to my FGA model"
 "Split my model into modular models"
@@ -337,10 +337,10 @@ fga-mcp-skills-quickstart/
 
 ### `get_context_for_query`
 
-Analyzes queries and returns relevant OpenFGA context.
+Analyzes queries and returns relevant FGA context.
 
 **Parameters:**
-- `query` (string): The query to analyze for OpenFGA patterns
+- `query` (string): The query to analyze for FGA patterns
 
 **Example:**
 ```json
@@ -351,7 +351,7 @@ Analyzes queries and returns relevant OpenFGA context.
 
 ### `list_available_contexts`
 
-Lists all available OpenFGA context prompts and their trigger patterns.
+Lists all available FGA context prompts and their trigger patterns.
 
 **Example:**
 ```json
@@ -378,8 +378,8 @@ External resources:
 - **Framework**: Model Context Protocol (MCP) SDK v1.17.1
 - **Language**: TypeScript with ES2022 target
 - **Transport**: STDIO for Claude Code CLI
-- **Pattern Engine**: Custom rule-based OpenFGA query matching (30+ patterns)
-- **Context Library**: 1,262 lines of expert OpenFGA + Auth0 FGA guidance
+- **Pattern Engine**: Custom rule-based FGA query matching (30+ patterns)
+- **Context Library**: 1,262 lines of expert guidance covering both OpenFGA and Auth0 FGA
 - **Logging**: Structured logging with performance metrics
 
 ## 🤝 Contributing
@@ -402,4 +402,4 @@ See [LICENSE](LICENSE) file for full details.
 
 ---
 
-**Ready to build fine-grained authorization systems?** Install the MCP server and FGA skill to get started with expert OpenFGA guidance in Claude Code!
+**Ready to build fine-grained authorization systems?** Install the MCP server and FGA skill to get started with expert FGA guidance in Claude Code!
