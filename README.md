@@ -154,11 +154,12 @@ Then try the FGA skill:
 
 ### MCP Server Features
 
-- **🚨 Automatic Expert Context** - Detects FGA queries
-- **🔍 Intelligent Pattern Matching** - Recognizes 31+ FGA-specific patterns
-- **📚 1200+ Lines of Expert Knowledge** - Covers both OpenFGA and Auth0 FGA
+- **🚨 Automatic Expert Context** - Detects FGA queries and injects relevant guidance
+- **🔍 Intelligent Pattern Matching** - Recognizes 80+ FGA-specific patterns across 7 topic areas
+- **📚 Chunked Expert Knowledge** - 6,000+ words organized into focused topics for efficient context delivery
 - **⚡ Zero Configuration** - Works automatically once installed
 - **🏢 Auth0 FGA Support** - CLI commands, SDK patterns, store management
+- **🎯 Smart Context Delivery** - Returns only relevant sections (70-95% token reduction per query)
 
 ### FGA Skill Features
 
@@ -197,10 +198,16 @@ The MCP server works automatically in the background. When you ask FGA-related q
 "Split my model into modular models"
 ```
 
-**Trigger patterns include:**
-- Core terms: `openfga`, `zanzibar`, `rebac`, `fga`
-- Concepts: `authorization model`, `relationship tuple`, `permission check`
-- Technical: `openfga dsl`, `openfga schema`, `authorization tuple`
+**The MCP server intelligently routes queries to focused topics:**
+- **Core Concepts** - "what is openfga", "dsl", "types", "tuples"
+- **Relationships** - "hierarchical permissions", "x from y", "usersets"
+- **Modeling** - "how to model", "step by step", "document management"
+- **Testing** - "test", "validate", ".fga.yaml", "assertions"
+- **Custom Roles** - "role assignment", "user defined roles"
+- **Advanced** - "modules", "best practices", "performance"
+- **Auth0 FGA** - "dashboard.fga.dev", "store id", "hosted fga"
+
+**Efficiency:** Each query returns only 1-3k tokens (instead of 11k), providing relevant context without noise.
 
 ### Using the FGA Skill
 
@@ -317,16 +324,23 @@ chmod +x install.sh
 fga-mcp-skills-quickstart/
 ├── src/
 │   ├── index.ts                    # MCP server implementation
-│   ├── prompt-matcher.ts           # Pattern matching engine
+│   ├── prompt-matcher.ts           # Intelligent pattern matching engine (7 topic areas)
 │   └── logger.ts                   # Logging system
-├── prompts/
-│   └── authorization-model.md      # OpenFGA + Auth0 FGA guidance (1200+ lines)
+├── prompts/                        # Chunked expert knowledge (6,000+ words)
+│   ├── fga-intro-concepts.md      # Core concepts & DSL (~1.4k tokens)
+│   ├── fga-relationships.md       # Relationships & patterns (~1.3k tokens)
+│   ├── fga-modeling-guide.md      # Step-by-step modeling (~1.1k tokens)
+│   ├── fga-testing.md             # Testing & validation (~1.3k tokens)
+│   ├── fga-custom-roles.md        # Custom role patterns (~1.4k tokens)
+│   ├── fga-advanced.md            # Modules & best practices (~0.6k tokens)
+│   └── fga-auth0.md               # Auth0 FGA specifics (~3.3k tokens)
 ├── skill/
 │   ├── SKILL.md                    # FGA skill for sales engineers (839 lines)
 │   └── reference.md                # Quick reference guide
 ├── demo-app/                       # (Coming soon) Next.js + Auth0 + FGA + LiteLLM
 ├── dist/                           # Compiled JavaScript output
 ├── install.sh                      # Automated installer (bash/zsh compatible)
+├── CHUNKING-SUMMARY.md             # Optimization details & benchmarks
 ├── CLAUDE-CODE-SETUP.md            # Detailed setup guide
 ├── DEMO-APP-PLAN.md                # Demo app implementation plan
 ├── NEXT-STEPS.md                   # Future enhancements context
@@ -365,7 +379,9 @@ The package includes comprehensive documentation:
 
 - **`skill/SKILL.md`** - Complete FGA skill guide with workflows and patterns (839 lines)
 - **`skill/reference.md`** - Quick reference for OpenFGA DSL syntax
-- **`prompts/authorization-model.md`** - Deep-dive expert guidance (1,262 lines: OpenFGA + Auth0 FGA)
+- **`prompts/`** - Chunked expert guidance across 7 focused topics (6,000+ words total)
+  - Core concepts, relationships, modeling, testing, custom roles, advanced topics, Auth0 FGA
+- **`CHUNKING-SUMMARY.md`** - Performance optimization details (70-95% token reduction)
 
 External resources:
 - [OpenFGA Documentation](https://openfga.dev)
@@ -379,9 +395,10 @@ External resources:
 - **Framework**: Model Context Protocol (MCP) SDK v1.17.1
 - **Language**: TypeScript with ES2022 target
 - **Transport**: STDIO for Claude Code CLI
-- **Pattern Engine**: Custom rule-based FGA query matching (30+ patterns)
-- **Context Library**: 1,262 lines of expert guidance covering both OpenFGA and Auth0 FGA
+- **Pattern Engine**: Intelligent topic-based routing (80+ patterns across 7 categories)
+- **Context Library**: 6,000+ words chunked into focused topics (70-95% smaller responses)
 - **Logging**: Structured logging with performance metrics
+- **Optimization**: Smart context delivery returns only relevant sections per query
 
 ## 🤝 Contributing
 

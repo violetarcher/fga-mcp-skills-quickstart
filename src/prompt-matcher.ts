@@ -16,42 +16,144 @@ export class PromptMatcher {
   private rules: PromptRule[] = [
     {
       patterns: [
-        'authorization model',
-        'auth model',
-        'access control',
-        'rbac',
-        'abac',
-        'permission',
-        'role based',
-        'attribute based',
-        'authentication',
-        'auth',
-        'security model',
-        'openfga',
-        'openfga model',
-        'openfga authorization',
-        'openfga auth',
-        'openfga dsl',
-        'openfga schema',
-        'openfga relations',
-        'openfga types',
-        'zanzibar',
-        'relationship based access control',
-        'rebac',
-        'fine grained access control',
-        'fga',
-        'tuple',
+        'what is openfga',
+        'what is fga',
+        'introduction',
+        'core concept',
+        'building block',
+        'type definition',
+        'object definition',
+        'user definition',
+        'relation definition',
         'relationship tuple',
         'authorization tuple',
-        'user relation object',
-        'permission check',
-        'can user',
-        'access check'
+        'tuple',
+        'dsl',
+        'modeling language',
+        'schema',
+        'zanzibar',
+        'rebac',
+        'relationship based access control',
+        'explain fga',
+        'fga basics',
+        'fga fundamentals',
+        'getting started'
       ],
-      promptFile: 'authorization-model.md',
-      description: 'Author authorization models with OpenFGA'
+      promptFile: 'fga-intro-concepts.md',
+      description: 'OpenFGA introduction and core concepts'
+    },
+    {
+      patterns: [
+        'direct relationship',
+        'concentric relationship',
+        'indirect relationship',
+        'x from y',
+        'from keyword',
+        'condition',
+        'conditional',
+        'userset',
+        'group based',
+        'hierarchical permission',
+        'inherit permission',
+        'parent child',
+        'nested permission',
+        'cel',
+        'common expression language'
+      ],
+      promptFile: 'fga-relationships.md',
+      description: 'Defining relationships in OpenFGA'
+    },
+    {
+      patterns: [
+        'custom role',
+        'user defined role',
+        'role assignment',
+        'dynamic role',
+        'assignee',
+        'role#assignee',
+        'flexible role',
+        'user create role',
+        'create role',
+        'define role'
+      ],
+      promptFile: 'fga-custom-roles.md',
+      description: 'Custom roles patterns'
+    },
+    {
+      patterns: [
+        'test',
+        'testing',
+        'validate',
+        'validation',
+        'fga.yaml',
+        '.fga.yaml',
+        'test file',
+        'assertion',
+        'check test',
+        'list_objects',
+        'list_users',
+        'fga model test',
+        'fga cli',
+        'cli command'
+      ],
+      promptFile: 'fga-testing.md',
+      description: 'Testing and validating FGA models'
+    },
+    {
+      patterns: [
+        'how do i create',
+        'how to model',
+        'step by step',
+        'build a model',
+        'create a model',
+        'author a model',
+        'document management',
+        'folder structure',
+        'permission example',
+        'modeling process',
+        'design model',
+        'can_ permission',
+        'define permission',
+        'add permission'
+      ],
+      promptFile: 'fga-modeling-guide.md',
+      description: 'Step-by-step modeling guide'
+    },
+    {
+      patterns: [
+        'module',
+        'modular',
+        'fga.mod',
+        'extend type',
+        'multi product',
+        'split model',
+        'best practice',
+        'performance',
+        'optimization'
+      ],
+      promptFile: 'fga-advanced.md',
+      description: 'Advanced topics and modules'
+    },
+    {
+      patterns: [
+        'auth0 fga',
+        'okta fga',
+        'hosted fga',
+        'dashboard.fga.dev',
+        'fga.dev',
+        'store id',
+        'api token',
+        'fga store',
+        'managed service',
+        'cloud fga',
+        'fga sdk',
+        '@auth0/fga',
+        'deployment',
+        'production'
+      ],
+      promptFile: 'fga-auth0.md',
+      description: 'Auth0 FGA hosted service'
     }
-   
   ];
 
   /**
