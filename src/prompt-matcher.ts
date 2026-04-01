@@ -101,6 +101,22 @@ export class PromptMatcher {
     },
     {
       patterns: [
+        'create module',
+        'module',
+        'modular',
+        'fga.mod',
+        'extend type',
+        'multi product',
+        'split model',
+        'best practice',
+        'performance',
+        'optimization'
+      ],
+      promptFile: 'fga-advanced.md',
+      description: 'Advanced topics and modules'
+    },
+    {
+      patterns: [
         'how do i create',
         'how to model',
         'step by step',
@@ -118,21 +134,6 @@ export class PromptMatcher {
       ],
       promptFile: 'fga-modeling-guide.md',
       description: 'Step-by-step modeling guide'
-    },
-    {
-      patterns: [
-        'module',
-        'modular',
-        'fga.mod',
-        'extend type',
-        'multi product',
-        'split model',
-        'best practice',
-        'performance',
-        'optimization'
-      ],
-      promptFile: 'fga-advanced.md',
-      description: 'Advanced topics and modules'
     },
     {
       patterns: [
