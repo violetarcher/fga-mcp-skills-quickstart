@@ -295,6 +295,220 @@ fga model get  # Uses default_store_id from config
 
 ---
 
+## Credential Security & Best Practices
+
+### Securing Your FGA Credentials
+
+Auth0 FGA credentials (Store ID, API Token, Client ID, Client Secret) grant full access to your authorization data. Follow these best practices:
+
+**✅ DO:**
+- Store credentials in environment variables
+- Use `~/.fga.yaml` for persistent CLI configuration (not committed to git)
+- Use `.env` files with `.gitignore` for project-specific config
+- Rotate API tokens regularly (Dashboard → Settings → API Tokens)
+- Use separate tokens per environment (dev, staging, production)
+- Use separate tokens per application/service
+- Store tokens in secret management systems (AWS Secrets Manager, HashiCorp Vault, etc.) for production
+
+**❌ DON'T:**
+- Never commit credentials to git repositories
+- Never hardcode credentials in source files
+- Never share credentials in plaintext (email, Slack, etc.)
+- Never use production tokens in development
+- Never log credentials to console or files
+- Never include credentials in screenshots or demos
+
+### Credential Storage Options
+
+**Option 1: Environment Variables (Quick Start)**
+```bash
+# Set temporarily for current shell session
+export FGA_STORE_ID='01ABC...'
+export FGA_API_TOKEN='your-token-here'
+export FGA_API_URL='https://api.us1.fga.dev'
+```
+
+**Option 2: ~/.fga.yaml (Recommended for CLI)**
+```yaml
+# ~/.fga.yaml (in your home directory, NOT in project)
+default_store_id: 01ABC...
+api_url: https://api.us1.fga.dev
+api_token: your-token-here
+```
+
+Then CLI commands work without flags:
+```bash
+fga model get  # Uses credentials from ~/.fga.yaml
+```
+
+**Option 3: .env File (Recommended for Projects)**
+```bash
+# Create .env file (add to .gitignore!)
+cat > .env <<EOF
+FGA_STORE_ID=01ABC...
+FGA_API_TOKEN=your-token-here
+FGA_API_URL=https://api.us1.fga.dev
+EOF
+
+# Add to .gitignore
+echo ".env" >> .gitignore
+
+# Load with direnv or dotenv
+source .env
+```
+
+**Option 4: Secret Management (Recommended for Production)**
+```bash
+# AWS Secrets Manager
+aws secretsmanager get-secret-value --secret-id fga-credentials
+
+# HashiCorp Vault
+vault kv get secret/fga-credentials
+
+# Kubernetes Secrets
+kubectl create secret generic fga-credentials \
+  --from-literal=store-id=01ABC... \
+  --from-literal=api-token=your-token
+```
+
+### Working with Claude Code & Credentials
+
+When using Claude Code to work with Auth0 FGA, you need to provide credentials. Here are secure approaches:
+
+**Method 1: Reference Environment Variables (Most Secure)**
+```
+I have my FGA credentials set as environment variables:
+- FGA_STORE_ID
+- FGA_API_TOKEN
+- FGA_API_URL
+
+Please use these when running FGA CLI commands.
+```
+
+Claude will use commands like:
+```bash
+fga model get --store-id $FGA_STORE_ID
+```
+
+**Method 2: Use ~/.fga.yaml (Recommended)**
+```
+I have configured my FGA credentials in ~/.fga.yaml
+
+Please run FGA CLI commands which will use those credentials automatically.
+```
+
+**Method 3: Provide Placeholders, Set Separately**
+```
+I want to work with my FGA store. I'll set the credentials separately.
+
+Here's the structure:
+- Store ID: 01ABC... (example)
+- Region: US1
+
+Please show me commands using $FGA_STORE_ID as a placeholder.
+```
+
+**⚠️ Avoid: Pasting Raw Credentials**
+
+If you must provide credentials directly (e.g., for initial setup):
+- Provide them once in a private session
+- Ask Claude to reference them as variables going forward
+- Rotate the tokens after the session
+- Never include Client Secrets in demos or shared code
+
+Example of safer approach:
+```
+I need help setting up my FGA store. I'll provide credentials once:
+
+Store ID: 01ABC123...
+API Token: fga_abc123... (I'll rotate this after our session)
+
+Please store these as $FGA_STORE_ID and $FGA_API_TOKEN for the rest of our conversation.
+```
+
+### Token Rotation
+
+Rotate API tokens regularly to maintain security:
+
+**Step 1: Create New Token**
+```
+Dashboard → Settings → API Tokens → Create Token
+```
+
+**Step 2: Update Configuration**
+```bash
+# Update environment variable
+export FGA_API_TOKEN='new-token-here'
+
+# Or update ~/.fga.yaml
+vim ~/.fga.yaml  # Update api_token field
+
+# Or update secret manager
+aws secretsmanager update-secret --secret-id fga-credentials \
+  --secret-string '{"api_token":"new-token"}'
+```
+
+**Step 3: Verify New Token Works**
+```bash
+fga store list  # Should succeed with new token
+```
+
+**Step 4: Revoke Old Token**
+```
+Dashboard → Settings → API Tokens → Revoke [old token]
+```
+
+### Multi-Environment Setup
+
+Use separate credentials per environment:
+
+```bash
+# Development
+export FGA_STORE_ID='01DEV...'
+export FGA_API_TOKEN='dev-token'
+
+# Staging
+export FGA_STORE_ID='01STAGE...'
+export FGA_API_TOKEN='staging-token'
+
+# Production
+export FGA_STORE_ID='01PROD...'
+export FGA_API_TOKEN='prod-token'
+```
+
+Or use multiple `~/.fga.yaml` files:
+```bash
+# Development commands
+fga model get --config ~/.fga.dev.yaml
+
+# Production commands
+fga model get --config ~/.fga.prod.yaml
+```
+
+### Credential Leak Response
+
+If credentials are accidentally exposed:
+
+**Immediate Actions:**
+1. Revoke compromised token: Dashboard → Settings → API Tokens → Revoke
+2. Create new token
+3. Update all systems using the old token
+4. Review store access logs for suspicious activity
+
+**Git Commit Exposure:**
+1. Revoke token immediately
+2. DO NOT just delete the file and commit again (token still in git history)
+3. Use `git filter-branch` or BFG Repo-Cleaner to remove from history
+4. Force push (coordinate with team)
+5. Rotate all credentials
+
+**Prevention:**
+- Use git hooks to scan for credentials before commit
+- Use tools like `truffleHog`, `git-secrets`, or `detect-secrets`
+- Enable GitHub secret scanning
+
+---
+
 ## Store Management Workflows
 
 ### Connecting to an Existing Store

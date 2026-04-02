@@ -132,7 +132,7 @@ const targetFiles = [
   { file: 'fga-testing.md', maxTokens: 2000 },
   { file: 'fga-custom-roles.md', maxTokens: 2000 },
   { file: 'fga-advanced.md', maxTokens: 1000 },
-  { file: 'fga-auth0.md', maxTokens: 5000 },
+  { file: 'fga-auth0.md', maxTokens: 6000 },
 ];
 
 for (const { file, maxTokens } of targetFiles) {

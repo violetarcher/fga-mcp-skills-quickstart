@@ -27,6 +27,37 @@ ls ~/.claude/skills/fga
 # Should show SKILL.md and reference.md
 ```
 
+**Credential Setup (IMPORTANT):**
+
+For demos, use a dedicated demo store (not production):
+
+```bash
+# Option 1: Environment Variables (for this demo session)
+export FGA_STORE_ID='<your-demo-store-id>'
+export FGA_API_TOKEN='<demo-api-token>'
+export FGA_API_URL='https://api.us1.fga.dev'
+
+# Option 2: ~/.fga.yaml (persistent, recommended)
+cat > ~/.fga.yaml <<EOF
+default_store_id: <your-demo-store-id>
+api_url: https://api.us1.fga.dev
+api_token: <demo-api-token>
+EOF
+```
+
+**🔒 Security Notes:**
+- Create a dedicated demo store (not production)
+- Use demo-specific API tokens
+- Rotate demo tokens after recording
+- Never include real production credentials in recordings
+- Blur credentials in screen recordings if visible
+
+**Verify Credentials:**
+```bash
+fga store get
+# Should display your demo store details
+```
+
 ---
 
 ## Part 1: Introduction (1 minute)
@@ -180,22 +211,30 @@ Should I be concerned about the recursive nature of the parent relationships? Wi
 **DO:** Switch to Terminal 2
 
 **SAY:**
-> "Now I'll configure the FGA CLI to connect to this store."
+> "I already have my FGA credentials configured. Let me verify the connection to this store."
+
+**NOTE FOR DEMO:**
+If you need to update credentials for the new store:
+```bash
+# Option 1: Update environment variable (if using env vars)
+export FGA_STORE_ID="<new-store-id>"
+
+# Option 2: Update ~/.fga.yaml (if using config file)
+# Edit the default_store_id field
+```
+
+**⚠️ SCREEN RECORDING TIP:** Blur or skip credential setup in recordings
 
 **TYPE:**
 ```bash
-# Set up credentials
-export FGA_STORE_ID="<paste-store-id>"
-export FGA_API_TOKEN="<your-token>"
-
-# Verify connection
+# Verify connection (credentials already set in setup)
 fga store get
 ```
 
-**EXPECTED OUTPUT:** Store details displayed
+**EXPECTED OUTPUT:** Store details displayed (blur Store ID in recording if needed)
 
 **SAY:**
-> "Great, we're connected. Let me write our model to the store."
+> "Perfect, we're connected. Let me write our model to the store."
 
 ---
 
