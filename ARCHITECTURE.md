@@ -12,8 +12,8 @@ graph TB
         Claude["Claude AI<br/>(processes queries)"]
     end
 
-    subgraph MCP["📦 MCP Server (Passive - Automatic)"]
-        MCPServer["src/index.ts<br/>MCP Server Entrypoint"]
+    subgraph MCP["📦 MCP Server (Tool Server)"]
+        MCPServer["src/index.ts<br/>MCP Server Entrypoint<br/>━━━━━━━━━━━━━━━━<br/>Exposes 2 Tools:<br/>• get_context_for_query<br/>• list_available_contexts"]
         PatternMatcher["src/prompt-matcher.ts<br/>Pattern Matching Engine<br/>90+ patterns"]
 
         subgraph Prompts["📚 Expert Knowledge (7 Topic Files)"]
@@ -34,15 +34,16 @@ graph TB
 
     UserQuery --> Claude
 
-    Claude -->|"Detects FGA patterns"| MCPServer
+    Claude -->|"Calls Tool:<br/>get_context_for_query('hierarchies')"| MCPServer
     MCPServer --> PatternMatcher
     PatternMatcher -->|"Routes query"| Prompts
 
-    Prompts -->|"Injects expert context"| Claude
+    Prompts -->|"Returns prompt content<br/>as tool result"| MCPServer
+    MCPServer -->|"Tool result"| Claude
 
     UserQuery -.->|"/fga command"| SkillMD
     SkillMD -->|"Loads workflow"| Claude
-    Claude -.->|"During workflow execution"| MCPServer
+    Claude -.->|"During workflow execution<br/>calls MCP tools"| MCPServer
 
     Claude -->|"Response with expert guidance"| UserQuery
 
@@ -158,7 +159,8 @@ sequenceDiagram
     actor User
     participant Claude as Claude Code
     participant Skill as FGA Skill
-    participant MCP as MCP Server
+    participant MCP as MCP Server Tools
+    participant Matcher as Pattern Matcher
     participant Prompts as Prompt Files
 
     Note over User,Prompts: Scenario: User invokes /fga to design a model
@@ -167,30 +169,38 @@ sequenceDiagram
 
     activate Skill
     Claude->>Skill: Load skill workflow
-    Skill-->>Claude: Workflow instructions
+    Skill-->>Claude: Workflow instructions loaded
     deactivate Skill
 
     Note over Claude: Claude processes task,<br/>thinks about FGA concepts
 
-    Claude->>MCP: get_context_for_query("hierarchical permissions")
+    Claude->>MCP: TOOL CALL: get_context_for_query<br/>(query: "hierarchical permissions")
     activate MCP
-    MCP->>Prompts: Load fga-relationships.md
-    Prompts-->>MCP: Relationship patterns content
-    MCP-->>Claude: Context injected (~1.3k tokens)
+    MCP->>Matcher: findBestMatch("hierarchical permissions")
+    activate Matcher
+    Matcher->>Prompts: Pattern matches fga-relationships.md
+    Prompts-->>Matcher: File content (~1.3k tokens)
+    Matcher-->>MCP: Matched content
+    deactivate Matcher
+    MCP-->>Claude: TOOL RESULT: Context content
     deactivate MCP
 
     Note over Claude: Claude applies workflow<br/>+ relationship knowledge
 
-    Claude->>MCP: get_context_for_query("custom roles")
+    Claude->>MCP: TOOL CALL: get_context_for_query<br/>(query: "custom roles")
     activate MCP
-    MCP->>Prompts: Load fga-custom-roles.md
-    Prompts-->>MCP: Custom roles patterns
-    MCP-->>Claude: Context injected (~1.4k tokens)
+    MCP->>Matcher: findBestMatch("custom roles")
+    activate Matcher
+    Matcher->>Prompts: Pattern matches fga-custom-roles.md
+    Prompts-->>Matcher: File content (~1.4k tokens)
+    Matcher-->>MCP: Matched content
+    deactivate Matcher
+    MCP-->>Claude: TOOL RESULT: Context content
     deactivate MCP
 
     Claude-->>User: Generated FGA model with:<br/>- Hierarchical permissions<br/>- Custom assignee pattern<br/>- Proper DSL syntax
 
-    Note over User,Prompts: Skill provides workflow structure<br/>MCP provides expert knowledge
+    Note over User,Prompts: Skill provides workflow structure<br/>MCP tools provide expert knowledge on demand
 ```
 
 ## Skill Invocation Flow
@@ -343,19 +353,77 @@ graph TD
     Rule4 -.-> Note1
 ```
 
+## MCP Tools Exposed
+
+The MCP server exposes **2 tools** that Claude Code can call:
+
+### Tool 1: `get_context_for_query`
+
+**Purpose**: Get relevant FGA expert context for a query
+
+**Input**:
+```json
+{
+  "query": "How do I model hierarchical permissions?"
+}
+```
+
+**Process**:
+1. Pattern matcher searches for matching patterns in query
+2. Routes to appropriate prompt file (e.g., fga-relationships.md)
+3. Loads file content
+
+**Output**:
+```
+Context found for query: "How do I model hierarchical permissions?"
+
+Using prompt: Defining relationships in OpenFGA
+
+---
+
+[Full content of fga-relationships.md (~1.3k tokens)]
+```
+
+### Tool 2: `list_available_contexts`
+
+**Purpose**: List all available context topics
+
+**Input**: None
+
+**Output**:
+```
+Available Context Prompts:
+
+**OpenFGA introduction and core concepts**
+File: fga-intro-concepts.md
+Patterns: what is openfga, core concept, dsl, ...
+
+**Defining relationships in OpenFGA**
+File: fga-relationships.md
+Patterns: hierarchical permission, x from y, ...
+
+[... 5 more topics]
+```
+
+**When Claude calls these tools:**
+- When user asks FGA-related questions
+- During `/fga` skill execution to get specific knowledge
+- When Claude needs to refresh context about a particular topic
+
 ## Key Architectural Principles
 
-### 1. Passive vs Active
+### 1. Tool Server vs Skill
 
-- **MCP Server (Passive)**: Automatically injects context based on patterns
-  - User never directly invokes
-  - Always listening for FGA patterns
-  - Returns 0.6k-6.3k tokens per query
+- **MCP Server (Tool Server)**: Exposes tools that Claude Code calls
+  - Provides 2 tools: `get_context_for_query`, `list_available_contexts`
+  - Claude Code decides when to call these tools based on query content
+  - Returns 0.6k-6.3k tokens per tool call
+  - User never directly invokes the tools
 
-- **Skill (Active)**: User explicitly invokes with `/fga`
-  - Provides structured workflows
+- **Skill (Active Workflow)**: User explicitly invokes with `/fga`
+  - Provides structured workflows loaded into Claude's context
   - Guides multi-step processes
-  - Benefits from MCP knowledge injection during execution
+  - During execution, Claude may call MCP tools to get expert knowledge
 
 ### 2. Pattern Matching Order
 
