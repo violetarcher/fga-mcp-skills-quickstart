@@ -373,7 +373,55 @@ kubectl create secret generic fga-credentials \
 
 ### Working with Claude Code & Credentials
 
-When using Claude Code to work with Auth0 FGA, you need to provide credentials. Here are secure approaches:
+**INSTRUCTIONS FOR CLAUDE:** When a user provides FGA credentials (Store ID, API Token, Client ID, Client Secret) in the conversation, you MUST:
+
+1. **Immediately offer to create secure storage:**
+   ```
+   I see you've provided FGA credentials. Let me help you store these securely.
+
+   I'll create a .env file for you with these credentials and add it to .gitignore.
+   Would you like me to do that?
+   ```
+
+2. **Create the .env file** (if user agrees):
+   - Use the Write tool to create `.env` with the provided credentials
+   - Add `.env` to `.gitignore` if not already present
+   - Never echo credentials back in plain text
+
+3. **Use environment variable references in ALL commands:**
+   - ✅ `fga model get --store-id $FGA_STORE_ID`
+   - ❌ `fga model get --store-id 01ABC123...` (never hardcode)
+
+4. **Remind about token rotation:**
+   ```
+   Note: Consider rotating your API token after this session for security.
+   ```
+
+**Example interaction:**
+
+```
+User: Here are my FGA credentials:
+FGA_STORE_ID=01KN78Z7WA5HGFC9YC9CE1G8JQ
+FGA_API_TOKEN=abc123token
+FGA_API_URL=https://api.us1.fga.dev
+
+Claude: I'll help you store these securely. Let me:
+1. Create a .env file with your credentials
+2. Add .env to .gitignore to prevent accidental commits
+3. Use environment variables in all CLI commands
+
+[Creates .env file with Write tool]
+[Updates .gitignore with Edit tool]
+
+Your credentials are now stored in .env. I'll reference them as $FGA_STORE_ID
+and $FGA_API_TOKEN in all commands going forward.
+
+Note: Consider rotating your API token after this session for security.
+```
+
+---
+
+When using Claude Code to work with Auth0 FGA, you need to provide credentials. Here are secure approaches for users:
 
 **Method 1: Reference Environment Variables (Most Secure)**
 ```
