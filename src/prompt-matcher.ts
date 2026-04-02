@@ -81,6 +81,37 @@ export class PromptMatcher {
     },
     {
       patterns: [
+        'auth0 fga',
+        'okta fga',
+        'hosted fga',
+        'dashboard.fga.dev',
+        'fga.dev',
+        'dashboard',
+        'store id',
+        'api token',
+        'fga store',
+        'managed service',
+        'cloud fga',
+        'fga sdk',
+        '@auth0/fga',
+        'deployment',
+        'production',
+        'store assertion',
+        'dashboard assertion',
+        'push assertion',
+        'import assertion',
+        'import store',
+        'store import',
+        'fga store import',
+        'persistent assertion',
+        'store export',
+        'fga store export'
+      ],
+      promptFile: 'fga-auth0.md',
+      description: 'Auth0 FGA hosted service'
+    },
+    {
+      patterns: [
         'test',
         'testing',
         'validate',
@@ -134,26 +165,6 @@ export class PromptMatcher {
       ],
       promptFile: 'fga-modeling-guide.md',
       description: 'Step-by-step modeling guide'
-    },
-    {
-      patterns: [
-        'auth0 fga',
-        'okta fga',
-        'hosted fga',
-        'dashboard.fga.dev',
-        'fga.dev',
-        'store id',
-        'api token',
-        'fga store',
-        'managed service',
-        'cloud fga',
-        'fga sdk',
-        '@auth0/fga',
-        'deployment',
-        'production'
-      ],
-      promptFile: 'fga-auth0.md',
-      description: 'Auth0 FGA hosted service'
     }
   ];
 

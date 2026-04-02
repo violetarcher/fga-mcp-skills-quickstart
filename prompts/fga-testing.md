@@ -4,6 +4,8 @@ Thorough testing and validation are indispensable. OpenFGA provides tools for ra
 
 **ALWAYS test the models you create. Run the `fga` CLI command directly, do not create a script to call the CLI.**
 
+**IMPORTANT**: This section covers **local testing** with `.fga.yaml` files for development and CI/CD. These tests are ephemeral and run on your local machine. For persistent assertions stored in Auth0 FGA stores (visible in dashboard.fga.dev), see the Auth0 FGA documentation about store imports with `fga store import`.
+
 ## OpenFGA CLI: Command-Line Model Management and Testing
 
 The OpenFGA CLI serves as a cross-platform command-line tool for interacting with an OpenFGA server. It provides a robust set of commands for various tasks, including:

@@ -531,4 +531,164 @@ fga model test --store-id $FGA_STORE_ID --tests tests.fga.yaml
 
 ---
 
+## Dashboard Assertions: Persistent Testing in Auth0 FGA
+
+**CRITICAL DISTINCTION**: There are two completely different testing approaches in FGA:
+
+### Local Testing vs Store Assertions
+
+| Aspect | Local Tests (.fga.yaml) | Store Assertions (fga.yaml) |
+|--------|------------------------|---------------------------|
+| **Purpose** | Development/CI testing | Production validation |
+| **File Name** | `.fga.yaml` (with dot) | `fga.yaml` or `store.fga.yaml` (no dot) |
+| **Command** | `fga model test --tests .fga.yaml` | `fga store import --file store.fga.yaml` |
+| **Storage** | Local filesystem only | Persisted in Auth0 FGA store |
+| **Visibility** | Developer's machine | Visible in dashboard.fga.dev |
+| **Lifecycle** | Ephemeral (run and discard) | Persistent (stored with model) |
+| **Use Case** | Quick iteration, pre-commit checks | Continuous validation, documentation |
+
+### Store File Format with Assertions
+
+When you want assertions to persist in your Auth0 FGA store (visible in dashboard), use the store file format:
+
+```yaml
+name: Task Management Store
+model_file: task-management.fga
+tuples:
+  - user: user:alice
+    relation: admin
+    object: workspace:acme
+  - user: workspace:acme
+    relation: parent
+    object: project:website
+  - user: project:website
+    relation: parent
+    object: task:design-homepage
+  - user: user:bob
+    relation: assignee
+    object: task:design-homepage
+tests:
+  - name: Workspace Admin Tests
+    check:
+      - user: user:alice
+        object: task:design-homepage
+        assertions:
+          admin: true
+          can_edit: true
+      - user: user:bob
+        object: task:design-homepage
+        assertions:
+          admin: false
+          can_edit: true  # true because bob is assignee
+  - name: Permission Inheritance Tests
+    check:
+      - user: user:alice
+        object: project:website
+        assertions:
+          admin: true
+    list_objects:
+      - user: user:alice
+        type: task
+        assertions:
+          admin:
+            - task:design-homepage
+```
+
+### Importing Store with Assertions
+
+```bash
+# Import complete store (model + tuples + assertions)
+fga store import --file store.fga.yaml --store-id <store-id>
+
+# This writes:
+# 1. Authorization model to the store
+# 2. Relationship tuples to the store
+# 3. Test assertions to the store (persistent)
+
+# View in dashboard
+# Navigate to dashboard.fga.dev → Your Store → Assertions tab
+```
+
+### Why Use Store Assertions?
+
+**Use local .fga.yaml tests when:**
+- Iterating on model design
+- Running pre-commit hooks
+- CI/CD pipeline validation
+- Quick development feedback
+
+**Use store assertions (fga store import) when:**
+- Documenting expected behavior in production
+- Creating executable specification
+- Continuous validation in dashboard
+- Sharing test scenarios with team
+- Onboarding new team members
+
+### Store Import Workflow
+
+**Complete workflow for pushing assertions to Auth0 FGA:**
+
+```bash
+# 1. Create store file with model, tuples, and assertions
+cat > store.fga.yaml <<EOF
+name: My Store
+model_file: model.fga
+tuples:
+  - user: user:alice
+    relation: admin
+    object: workspace:acme
+tests:
+  - name: Admin Tests
+    check:
+      - user: user:alice
+        object: workspace:acme
+        assertions:
+          admin: true
+EOF
+
+# 2. Validate locally first (optional but recommended)
+fga model test --tests store.fga.yaml
+
+# 3. Import to store (writes model, tuples, AND assertions)
+fga store import --file store.fga.yaml --store-id $FGA_STORE_ID
+
+# 4. Verify in dashboard
+# Go to dashboard.fga.dev → Store → Assertions tab
+# Your assertions are now persistent and can be run from the UI
+```
+
+### Exporting Store with Assertions
+
+```bash
+# Export complete store (including assertions)
+fga store export --store-id <store-id> > exported-store.fga.yaml
+
+# The exported file includes:
+# - Current authorization model
+# - All relationship tuples
+# - All stored assertions
+```
+
+### API/SDK: Managing Assertions Programmatically
+
+**Note**: Assertions are typically managed via CLI and store import. The FGA SDKs focus on runtime authorization checks (check, listObjects, listUsers) rather than assertion management. For programmatic assertion management, use:
+
+```bash
+# Script to deploy store with assertions
+#!/bin/bash
+export FGA_STORE_ID="your-store-id"
+export FGA_API_TOKEN="your-api-token"
+
+# Deploy everything including assertions
+fga store import --file production-store.fga.yaml --store-id $FGA_STORE_ID
+
+# Verify
+fga store export --store-id $FGA_STORE_ID > verify.yaml
+diff production-store.fga.yaml verify.yaml
+```
+
+**Key Insight**: Think of store assertions as "executable documentation" - they live with your authorization model in production and serve as both tests and documentation of expected behavior.
+
+---
+
 When users ask about Auth0 FGA, dashboard.fga.dev, hosted FGA, or Okta FGA, provide this Auth0 FGA-specific guidance in addition to the generic OpenFGA modeling concepts.
