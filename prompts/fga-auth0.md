@@ -295,6 +295,175 @@ fga model get  # Uses default_store_id from config
 
 ---
 
+## Troubleshooting CLI Authentication Issues
+
+### Commands Hanging with No Output
+
+**Symptom**: FGA CLI commands hang indefinitely showing only "Using config file: ~/.fga.yaml" with no error message or progress.
+
+**Common Causes**:
+1. **Config file conflicts** - `~/.fga.yaml` credentials conflict with environment variables or CLI flags
+2. **Missing client credential parameters** - Using client ID/secret without all required parameters
+3. **Invalid or expired tokens** - Credentials in config file are no longer valid
+
+**Solution 1: Bypass Config File**
+
+If you have conflicting credentials, bypass `~/.fga.yaml` entirely:
+
+```bash
+# Use --config /dev/null to ignore ~/.fga.yaml
+source .env
+fga store import --config /dev/null \
+  --file store.fga.yaml \
+  --store-id "$FGA_STORE_ID" \
+  --api-url "https://api.us1.fga.dev" \
+  --client-id "$FGA_CLIENT_ID" \
+  --client-secret "$FGA_CLIENT_SECRET" \
+  --api-token-issuer "auth.fga.dev" \
+  --api-audience "https://api.us1.fga.dev/"
+```
+
+**Solution 2: Use Direct API Token (Simplest)**
+
+For CLI usage, use a direct API token instead of client credentials:
+
+```yaml
+# ~/.fga.yaml
+default_store_id: 01ABC...
+api_url: https://api.us1.fga.dev
+api_token: fga_xxxxx...  # Direct token from dashboard
+```
+
+Then commands work without additional flags:
+```bash
+fga store import --file store.fga.yaml
+```
+
+### Two Authentication Methods
+
+Auth0 FGA supports two authentication approaches:
+
+| Method | Use Case | Configuration | When to Use |
+|--------|----------|---------------|-------------|
+| **Direct API Token** | CLI usage, quick setup | `api_token` in ~/.fga.yaml | Individual developer CLI usage |
+| **Client Credentials** | SDKs, programmatic access | `client-id` + `client-secret` + `issuer` + `audience` | Production applications, automation |
+
+**⚠️ Don't Mix Both**: Having both `api_token` in ~/.fga.yaml AND client credentials in environment variables can cause conflicts.
+
+### Client Credentials Flow - All Required Parameters
+
+When using client credentials (recommended for SDKs and programmatic access), you **must** provide ALL four parameters:
+
+```bash
+--client-id <your-client-id>
+--client-secret <your-client-secret>
+--api-token-issuer auth.fga.dev          # Required!
+--api-audience https://api.us1.fga.dev/  # Required!
+```
+
+**Missing any parameter causes authentication to fail silently.**
+
+Add these to your `.env` file:
+
+```bash
+# Client Credentials (for SDKs/programmatic access)
+FGA_CLIENT_ID=A8On6lcfVsdoecbnxCjYqVI2MfpJuJNo
+FGA_CLIENT_SECRET=your-client-secret-here
+FGA_API_TOKEN_ISSUER=auth.fga.dev
+FGA_API_AUDIENCE=https://api.us1.fga.dev/
+```
+
+Then use them consistently:
+
+```bash
+source .env
+fga store import --config /dev/null \
+  --file store.fga.yaml \
+  --store-id "$FGA_STORE_ID" \
+  --api-url "$FGA_API_URL" \
+  --client-id "$FGA_CLIENT_ID" \
+  --client-secret "$FGA_CLIENT_SECRET" \
+  --api-token-issuer "$FGA_API_TOKEN_ISSUER" \
+  --api-audience "$FGA_API_AUDIENCE"
+```
+
+### Environment Variables vs Config File
+
+**What We Learned**: Environment variables don't reliably override `~/.fga.yaml` settings.
+
+**Best Practice**:
+- **For CLI**: Use `~/.fga.yaml` with direct `api_token`
+- **For Scripts**: Use explicit flags with `--config /dev/null` to bypass config file
+- **For SDKs**: Use environment variables with client credentials (SDKs don't read ~/.fga.yaml)
+
+### Quick Diagnostic Checklist
+
+When FGA CLI commands hang or fail:
+
+```bash
+# 1. Check if ~/.fga.yaml exists and what's in it
+cat ~/.fga.yaml
+
+# 2. Verify you have valid credentials
+fga store list --config /dev/null \
+  --api-url "https://api.us1.fga.dev" \
+  --client-id "$FGA_CLIENT_ID" \
+  --client-secret "$FGA_CLIENT_SECRET" \
+  --api-token-issuer "auth.fga.dev" \
+  --api-audience "https://api.us1.fga.dev/"
+
+# 3. If step 2 works, the issue is config file conflict
+# Solution: Use --config /dev/null in all commands
+
+# 4. If step 2 hangs, check your client credentials are correct
+# Solution: Regenerate credentials from dashboard.fga.dev
+```
+
+### Common Error Messages
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| `bearer token is missing in the request` | Client credentials missing `--api-token-issuer` or `--api-audience` | Add all 4 client credential parameters |
+| `failed to get model due to storeId is required` | Store ID not being read from config/env | Use explicit `--store-id` flag |
+| Command hangs with only "Using config file..." | Config file conflicts or invalid token | Use `--config /dev/null` with explicit flags |
+| `Configuration.ApiUrl () does not form a valid uri` | Empty or malformed API URL | Check `FGA_API_URL` is set correctly |
+
+### Recommended Setup for Different Use Cases
+
+**For Individual Developers (CLI Usage)**:
+```yaml
+# ~/.fga.yaml
+default_store_id: 01ABC...
+api_url: https://api.us1.fga.dev
+api_token: fga_xxxxx...  # Get from dashboard → Settings → API Tokens
+```
+
+**For Team Projects (SDK/Application Usage)**:
+```bash
+# .env (in project directory)
+FGA_STORE_ID=01ABC...
+FGA_API_URL=https://api.us1.fga.dev
+FGA_CLIENT_ID=your-client-id
+FGA_CLIENT_SECRET=your-client-secret
+FGA_API_TOKEN_ISSUER=auth.fga.dev
+FGA_API_AUDIENCE=https://api.us1.fga.dev/
+```
+
+**For CI/CD Pipelines**:
+```bash
+# Use explicit flags, don't rely on config files
+fga store import --config /dev/null \
+  --file store.fga.yaml \
+  --store-id "$FGA_STORE_ID" \
+  --api-url "$FGA_API_URL" \
+  --client-id "$FGA_CLIENT_ID" \
+  --client-secret "$FGA_CLIENT_SECRET" \
+  --api-token-issuer "$FGA_API_TOKEN_ISSUER" \
+  --api-audience "$FGA_API_AUDIENCE"
+```
+
+---
+
 ## Credential Security & Best Practices
 
 ### Securing Your FGA Credentials
@@ -388,11 +557,43 @@ kubectl create secret generic fga-credentials \
    - Add `.env` to `.gitignore` if not already present
    - Never echo credentials back in plain text
 
-3. **Use environment variable references in ALL commands:**
+3. **Use the correct authentication method for FGA CLI commands:**
+
+   **If using Client Credentials (FGA_CLIENT_ID + FGA_CLIENT_SECRET):**
+   - MUST include ALL FOUR parameters: `--client-id`, `--client-secret`, `--api-token-issuer auth.fga.dev`, `--api-audience https://api.us1.fga.dev/`
+   - Use `--config /dev/null` to bypass ~/.fga.yaml conflicts
+   - Example:
+     ```bash
+     source .env
+     fga store import --config /dev/null \
+       --file store.fga.yaml \
+       --store-id "$FGA_STORE_ID" \
+       --api-url "$FGA_API_URL" \
+       --client-id "$FGA_CLIENT_ID" \
+       --client-secret "$FGA_CLIENT_SECRET" \
+       --api-token-issuer "auth.fga.dev" \
+       --api-audience "https://api.us1.fga.dev/"
+     ```
+
+   **If using Direct API Token (FGA_API_TOKEN):**
+   - Simpler approach for CLI usage
+   - Can rely on ~/.fga.yaml configuration
+   - Example:
+     ```bash
+     fga store import --file store.fga.yaml --store-id "$FGA_STORE_ID"
+     ```
+
+4. **When commands hang with "Using config file..." and no progress:**
+   - This indicates authentication issues or config file conflicts
+   - Try using `--config /dev/null` to bypass ~/.fga.yaml
+   - Ensure all client credential parameters are provided if using that method
+   - See the "Troubleshooting CLI Authentication Issues" section above
+
+5. **Use environment variable references in ALL commands:**
    - ✅ `fga model get --store-id $FGA_STORE_ID`
    - ❌ `fga model get --store-id 01ABC123...` (never hardcode)
 
-4. **Remind about token rotation:**
+6. **Remind about token rotation:**
    ```
    Note: Consider rotating your API token after this session for security.
    ```
