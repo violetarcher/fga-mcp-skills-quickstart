@@ -2,18 +2,57 @@
 
 Auth0 FGA (now Okta Fine-Grained Authorization) is the fully managed, hosted version of OpenFGA available at **dashboard.fga.dev**. This section provides specific guidance for working with the hosted service, including CLI commands, SDK integration, and store management.
 
-## Differences: Auth0 FGA vs Self-Hosted OpenFGA
+## Key Facts About Auth0 FGA
 
-| Aspect | Auth0 FGA (Hosted) | OpenFGA (Self-Hosted) |
-|--------|-------------------|----------------------|
-| **Hosting** | Fully managed at dashboard.fga.dev | Self-hosted infrastructure |
-| **Configuration** | Store ID + API Token | Custom deployment URL |
-| **API URL** | `https://api.us1.fga.dev` (regional) | Your deployment URL |
-| **Management** | Web dashboard + CLI | CLI + API only |
-| **SLA** | Production SLA included | Your responsibility |
-| **Modeling Language** | Same DSL | Same DSL |
+- **Fully managed** at dashboard.fga.dev
+- **Authentication**: OAuth2 Client Credentials flow (no simple API tokens)
+- **Credentials needed**: Client ID + Client Secret (from "Authorized Clients" in dashboard)
+- **API URL**: `https://api.us1.fga.dev` (US) or `https://api.eu1.fga.dev` (EU)
+- **Management**: Web dashboard + CLI + SDK
 
-**Key Point**: Users working with Auth0 FGA at dashboard.fga.dev need Store IDs and API Tokens, not deployment URLs.
+**Key Point**: Auth0 FGA uses **OAuth2 Client Credentials flow exclusively**. You create an "Authorized Client" in the dashboard to get a Client ID and Client Secret, which are exchanged for access tokens automatically by the SDK/CLI. There is no simple "API Token" you can create from the dashboard.
+
+---
+
+## Auth0 FGA Authentication
+
+### How Authentication Works
+
+Auth0 FGA uses the **OAuth 2.0 Client Credentials flow**:
+
+1. You create an "Authorized Client" in the dashboard → get `clientId` + `clientSecret`
+2. The SDK/CLI exchanges these credentials for an access token via `https://auth.fga.dev/oauth/token`
+3. The access token is used as a Bearer token for API requests
+4. The SDK handles token refresh automatically
+
+**There is no simple "API Token" you can create from the dashboard.** All authentication goes through client credentials.
+
+### Obtaining Credentials
+
+1. Go to **dashboard.fga.dev**
+2. Select your store (or create one)
+3. Navigate to **Settings** → **Authorized Clients**
+4. Click **Create Client**
+5. Save the `Client ID` and `Client Secret` immediately (secret cannot be retrieved later)
+
+### Required Environment Variables
+
+```bash
+# Auth0 FGA Configuration
+FGA_STORE_ID=<your-store-id>                    # From dashboard URL or fga store list
+FGA_API_URL=https://api.us1.fga.dev             # Regional API endpoint (US1 or EU1)
+FGA_CLIENT_ID=<your-client-id>                  # From Authorized Clients
+FGA_CLIENT_SECRET=<your-client-secret>          # From Authorized Clients
+FGA_API_TOKEN_ISSUER=auth.fga.dev               # Token issuer (always this for Auth0 FGA)
+FGA_API_AUDIENCE=https://api.us1.fga.dev/       # Must match your region with trailing slash
+```
+
+### Regional Endpoints
+
+| Region | API URL | Audience |
+|--------|---------|----------|
+| US | `https://api.us1.fga.dev` | `https://api.us1.fga.dev/` |
+| EU | `https://api.eu1.fga.dev` | `https://api.eu1.fga.dev/` |
 
 ---
 
@@ -28,6 +67,42 @@ brew install openfga/tap/fga
 
 # Verify installation
 fga version
+```
+
+### CLI Configuration for Auth0 FGA
+
+Create `~/.fga.yaml` for persistent configuration:
+
+```yaml
+# ~/.fga.yaml - Auth0 FGA configuration
+api-url: https://api.us1.fga.dev
+store-id: 01ABC123...
+client-id: your-client-id
+client-secret: your-client-secret
+api-token-issuer: auth.fga.dev
+api-audience: https://api.us1.fga.dev/
+```
+
+Then CLI commands work without additional flags:
+```bash
+fga model get  # Uses credentials from ~/.fga.yaml
+```
+
+**Alternative: Use environment variables**
+```bash
+source .env  # Load FGA_* variables
+fga model get --store-id $FGA_STORE_ID
+```
+
+**Alternative: Explicit flags (useful for CI/CD)**
+```bash
+fga model get \
+  --api-url "https://api.us1.fga.dev" \
+  --store-id "$FGA_STORE_ID" \
+  --client-id "$FGA_CLIENT_ID" \
+  --client-secret "$FGA_CLIENT_SECRET" \
+  --api-token-issuer "auth.fga.dev" \
+  --api-audience "https://api.us1.fga.dev/"
 ```
 
 ### Store Management
@@ -137,27 +212,35 @@ fga model test --store-id <store-id> --tests model-tests.fga.yaml
 
 **Installation**:
 ```bash
-npm install @auth0/fga
+npm install @openfga/sdk
 ```
 
-**Initialization**:
+**Initialization with Client Credentials**:
 ```typescript
-import { FGA } from '@auth0/fga';
+import { OpenFgaClient, CredentialsMethod } from '@openfga/sdk';
 
-const fga = new FGA({
-  apiUrl: process.env.FGA_API_URL,        // https://api.us1.fga.dev
-  storeId: process.env.FGA_STORE_ID,      // Your store ID from dashboard
-  apiToken: process.env.FGA_API_TOKEN,    // API token from dashboard
+const fgaClient = new OpenFgaClient({
+  apiUrl: process.env.FGA_API_URL,           // https://api.us1.fga.dev
+  storeId: process.env.FGA_STORE_ID,
+  credentials: {
+    method: CredentialsMethod.ClientCredentials,
+    config: {
+      apiTokenIssuer: process.env.FGA_API_TOKEN_ISSUER,   // auth.fga.dev
+      apiAudience: process.env.FGA_API_AUDIENCE,          // https://api.us1.fga.dev/
+      clientId: process.env.FGA_CLIENT_ID,
+      clientSecret: process.env.FGA_CLIENT_SECRET,
+    },
+  },
 });
 ```
 
 **Authorization Check**:
 ```typescript
 // Check if user can perform action on object
-const { allowed } = await fga.check({
+const { allowed } = await fgaClient.check({
   user: 'user:alice',
   relation: 'can_read',
-  object: 'document:readme'
+  object: 'document:readme',
 });
 
 if (allowed) {
@@ -171,31 +254,31 @@ if (allowed) {
 **Write Tuples**:
 ```typescript
 // Grant alice ownership of document
-await fga.write({
+await fgaClient.write({
   writes: [{
     user: 'user:alice',
     relation: 'owner',
-    object: 'document:readme'
-  }]
+    object: 'document:readme',
+  }],
 });
 
 // Revoke access (delete tuple)
-await fga.write({
+await fgaClient.write({
   deletes: [{
     user: 'user:bob',
     relation: 'viewer',
-    object: 'document:readme'
-  }]
+    object: 'document:readme',
+  }],
 });
 ```
 
 **List Objects**:
 ```typescript
 // Get all documents alice can read
-const { objects } = await fga.listObjects({
+const { objects } = await fgaClient.listObjects({
   user: 'user:alice',
   relation: 'can_read',
-  type: 'document'
+  type: 'document',
 });
 
 console.log(objects); // ['document:readme', 'document:proposal', ...]
@@ -204,16 +287,16 @@ console.log(objects); // ['document:readme', 'document:proposal', ...]
 **Error Handling**:
 ```typescript
 try {
-  const result = await fga.check({
+  const result = await fgaClient.check({
     user: 'user:alice',
     relation: 'can_read',
-    object: 'document:readme'
+    object: 'document:readme',
   });
 } catch (error) {
   if (error.code === 'FGA_STORE_NOT_FOUND') {
     console.error('Store not found - check Store ID');
   } else if (error.code === 'FGA_UNAUTHORIZED') {
-    console.error('Invalid API token');
+    console.error('Invalid credentials - check Client ID/Secret');
   } else {
     console.error('FGA error:', error.message);
   }
@@ -224,73 +307,52 @@ try {
 
 **Installation**:
 ```bash
-pip install auth0-fga
+pip install openfga_sdk
 ```
 
-**Initialization**:
+**Initialization with Client Credentials**:
 ```python
-from auth0_fga import FGAClient
 import os
+import openfga_sdk
+from openfga_sdk.client import OpenFgaClient
+from openfga_sdk.credentials import Credentials, CredentialConfiguration
 
-client = FGAClient(
-    api_url=os.getenv('FGA_API_URL'),
-    store_id=os.getenv('FGA_STORE_ID'),
-    api_token=os.getenv('FGA_API_TOKEN')
+credentials = Credentials(
+    method='client_credentials',
+    configuration=CredentialConfiguration(
+        api_issuer=os.environ.get('FGA_API_TOKEN_ISSUER'),   # auth.fga.dev
+        api_audience=os.environ.get('FGA_API_AUDIENCE'),     # https://api.us1.fga.dev/
+        client_id=os.environ.get('FGA_CLIENT_ID'),
+        client_secret=os.environ.get('FGA_CLIENT_SECRET'),
+    )
 )
+
+configuration = openfga_sdk.ClientConfiguration(
+    api_url=os.environ.get('FGA_API_URL'),      # https://api.us1.fga.dev
+    store_id=os.environ.get('FGA_STORE_ID'),
+    credentials=credentials,
+)
+
+async with OpenFgaClient(configuration) as fga_client:
+    # Use fga_client for authorization checks
+    pass
 ```
 
 **Authorization Check**:
 ```python
-response = await client.check({
-    "user": "user:alice",
-    "relation": "can_read",
-    "object": "document:readme"
-})
+from openfga_sdk.client.models import ClientCheckRequest
+
+response = await fga_client.check(ClientCheckRequest(
+    user="user:alice",
+    relation="can_read",
+    object="document:readme",
+))
 
 if response.allowed:
     # Grant access
     return document
 else:
     raise ForbiddenError("Access denied")
-```
-
----
-
-## Environment Configuration
-
-**Required Environment Variables**:
-```bash
-# Auth0 FGA Configuration
-FGA_STORE_ID=<your-store-id>           # From dashboard.fga.dev
-FGA_API_URL=https://api.us1.fga.dev    # Regional API endpoint
-FGA_API_TOKEN=<your-api-token>         # Generated in dashboard Settings > API Tokens
-```
-
-**Obtaining Credentials**:
-1. **Store ID**:
-   - Available in dashboard URL: `dashboard.fga.dev/stores/<store-id>`
-   - Or run: `fga store list`
-
-2. **API Token**:
-   - Dashboard → Settings → API Tokens → Create Token
-   - Save immediately (cannot be retrieved later)
-
-3. **API URL**:
-   - US Region: `https://api.us1.fga.dev`
-   - EU Region: `https://api.eu1.fga.dev`
-   - Check dashboard for your region
-
-**CLI Configuration** (Optional):
-Create `~/.fga.yaml` for persistent configuration:
-```yaml
-default_store_id: <your-store-id>
-api_url: https://api.us1.fga.dev
-api_token: <your-api-token>
-```
-
-Then CLI commands don't need `--store-id` flag:
-```bash
-fga model get  # Uses default_store_id from config
 ```
 
 ---
@@ -302,20 +364,15 @@ fga model get  # Uses default_store_id from config
 **Symptom**: FGA CLI commands hang indefinitely showing only "Using config file: ~/.fga.yaml" with no error message or progress.
 
 **Common Causes**:
-1. **Config file conflicts** - `~/.fga.yaml` credentials conflict with environment variables or CLI flags
-2. **Missing client credential parameters** - Using client ID/secret without all required parameters
-3. **Invalid or expired tokens** - Credentials in config file are no longer valid
+1. **Missing client credential parameters** - All four parameters are required
+2. **Config file conflicts** - `~/.fga.yaml` has incomplete or conflicting settings
+3. **Invalid credentials** - Client ID/Secret are incorrect or revoked
 
-**Solution 1: Bypass Config File**
-
-If you have conflicting credentials, bypass `~/.fga.yaml` entirely:
+**Solution: Bypass Config File and Use Explicit Flags**
 
 ```bash
-# Use --config /dev/null to ignore ~/.fga.yaml
 source .env
-fga store import --config /dev/null \
-  --file store.fga.yaml \
-  --store-id "$FGA_STORE_ID" \
+fga store list \
   --api-url "https://api.us1.fga.dev" \
   --client-id "$FGA_CLIENT_ID" \
   --client-secret "$FGA_CLIENT_SECRET" \
@@ -323,88 +380,45 @@ fga store import --config /dev/null \
   --api-audience "https://api.us1.fga.dev/"
 ```
 
-**Solution 2: Use Direct API Token (Simplest)**
-
-For CLI usage, use a direct API token instead of client credentials:
-
-```yaml
-# ~/.fga.yaml
-default_store_id: 01ABC...
-api_url: https://api.us1.fga.dev
-api_token: fga_xxxxx...  # Direct token from dashboard
-```
-
-Then commands work without additional flags:
+Or use `--config /dev/null` to ignore any existing config file:
 ```bash
-fga store import --file store.fga.yaml
-```
-
-### Two Authentication Methods
-
-Auth0 FGA supports two authentication approaches:
-
-| Method | Use Case | Configuration | When to Use |
-|--------|----------|---------------|-------------|
-| **Direct API Token** | CLI usage, quick setup | `api_token` in ~/.fga.yaml | Individual developer CLI usage |
-| **Client Credentials** | SDKs, programmatic access | `client-id` + `client-secret` + `issuer` + `audience` | Production applications, automation |
-
-**⚠️ Don't Mix Both**: Having both `api_token` in ~/.fga.yaml AND client credentials in environment variables can cause conflicts.
-
-### Client Credentials Flow - All Required Parameters
-
-When using client credentials (recommended for SDKs and programmatic access), you **must** provide ALL four parameters:
-
-```bash
---client-id <your-client-id>
---client-secret <your-client-secret>
---api-token-issuer auth.fga.dev          # Required!
---api-audience https://api.us1.fga.dev/  # Required!
-```
-
-**Missing any parameter causes authentication to fail silently.**
-
-Add these to your `.env` file:
-
-```bash
-# Client Credentials (for SDKs/programmatic access)
-FGA_CLIENT_ID=A8On6lcfVsdoecbnxCjYqVI2MfpJuJNo
-FGA_CLIENT_SECRET=your-client-secret-here
-FGA_API_TOKEN_ISSUER=auth.fga.dev
-FGA_API_AUDIENCE=https://api.us1.fga.dev/
-```
-
-Then use them consistently:
-
-```bash
-source .env
-fga store import --config /dev/null \
-  --file store.fga.yaml \
-  --store-id "$FGA_STORE_ID" \
-  --api-url "$FGA_API_URL" \
+fga store list --config /dev/null \
+  --api-url "https://api.us1.fga.dev" \
   --client-id "$FGA_CLIENT_ID" \
   --client-secret "$FGA_CLIENT_SECRET" \
-  --api-token-issuer "$FGA_API_TOKEN_ISSUER" \
-  --api-audience "$FGA_API_AUDIENCE"
+  --api-token-issuer "auth.fga.dev" \
+  --api-audience "https://api.us1.fga.dev/"
 ```
 
-### Environment Variables vs Config File
+### Client Credentials - All Required Parameters
 
-**What We Learned**: Environment variables don't reliably override `~/.fga.yaml` settings.
+When using Auth0 FGA, you **must** provide ALL FOUR credential parameters:
 
-**Best Practice**:
-- **For CLI**: Use `~/.fga.yaml` with direct `api_token`
-- **For Scripts**: Use explicit flags with `--config /dev/null` to bypass config file
-- **For SDKs**: Use environment variables with client credentials (SDKs don't read ~/.fga.yaml)
+| Parameter | CLI Flag | Environment Variable | Value for Auth0 FGA |
+|-----------|----------|---------------------|---------------------|
+| Client ID | `--client-id` | `FGA_CLIENT_ID` | From dashboard |
+| Client Secret | `--client-secret` | `FGA_CLIENT_SECRET` | From dashboard |
+| Token Issuer | `--api-token-issuer` | `FGA_API_TOKEN_ISSUER` | `auth.fga.dev` |
+| API Audience | `--api-audience` | `FGA_API_AUDIENCE` | `https://api.us1.fga.dev/` |
+
+**Missing any parameter causes authentication to fail silently (CLI hangs).**
 
 ### Quick Diagnostic Checklist
 
 When FGA CLI commands hang or fail:
 
 ```bash
-# 1. Check if ~/.fga.yaml exists and what's in it
+# 1. Check if ~/.fga.yaml exists and has complete credentials
 cat ~/.fga.yaml
 
-# 2. Verify you have valid credentials
+# 2. Verify all required fields are present:
+#    - api-url
+#    - client-id
+#    - client-secret
+#    - api-token-issuer
+#    - api-audience
+
+# 3. Test with explicit flags (bypassing config)
 fga store list --config /dev/null \
   --api-url "https://api.us1.fga.dev" \
   --client-id "$FGA_CLIENT_ID" \
@@ -412,10 +426,7 @@ fga store list --config /dev/null \
   --api-token-issuer "auth.fga.dev" \
   --api-audience "https://api.us1.fga.dev/"
 
-# 3. If step 2 works, the issue is config file conflict
-# Solution: Use --config /dev/null in all commands
-
-# 4. If step 2 hangs, check your client credentials are correct
+# 4. If step 3 hangs, credentials are likely invalid
 # Solution: Regenerate credentials from dashboard.fga.dev
 ```
 
@@ -423,44 +434,11 @@ fga store list --config /dev/null \
 
 | Error | Cause | Solution |
 |-------|-------|----------|
-| `bearer token is missing in the request` | Client credentials missing `--api-token-issuer` or `--api-audience` | Add all 4 client credential parameters |
-| `failed to get model due to storeId is required` | Store ID not being read from config/env | Use explicit `--store-id` flag |
-| Command hangs with only "Using config file..." | Config file conflicts or invalid token | Use `--config /dev/null` with explicit flags |
+| `bearer token is missing in the request` | Missing `--api-token-issuer` or `--api-audience` | Add all 4 client credential parameters |
+| `failed to get model due to storeId is required` | Store ID not provided | Use explicit `--store-id` flag |
+| Command hangs with only "Using config file..." | Incomplete credentials or invalid config | Use `--config /dev/null` with explicit flags |
 | `Configuration.ApiUrl () does not form a valid uri` | Empty or malformed API URL | Check `FGA_API_URL` is set correctly |
-
-### Recommended Setup for Different Use Cases
-
-**For Individual Developers (CLI Usage)**:
-```yaml
-# ~/.fga.yaml
-default_store_id: 01ABC...
-api_url: https://api.us1.fga.dev
-api_token: fga_xxxxx...  # Get from dashboard → Settings → API Tokens
-```
-
-**For Team Projects (SDK/Application Usage)**:
-```bash
-# .env (in project directory)
-FGA_STORE_ID=01ABC...
-FGA_API_URL=https://api.us1.fga.dev
-FGA_CLIENT_ID=your-client-id
-FGA_CLIENT_SECRET=your-client-secret
-FGA_API_TOKEN_ISSUER=auth.fga.dev
-FGA_API_AUDIENCE=https://api.us1.fga.dev/
-```
-
-**For CI/CD Pipelines**:
-```bash
-# Use explicit flags, don't rely on config files
-fga store import --config /dev/null \
-  --file store.fga.yaml \
-  --store-id "$FGA_STORE_ID" \
-  --api-url "$FGA_API_URL" \
-  --client-id "$FGA_CLIENT_ID" \
-  --client-secret "$FGA_CLIENT_SECRET" \
-  --api-token-issuer "$FGA_API_TOKEN_ISSUER" \
-  --api-audience "$FGA_API_AUDIENCE"
-```
+| `invalid_client` | Wrong Client ID or Secret | Regenerate credentials in dashboard |
 
 ---
 
@@ -468,65 +446,58 @@ fga store import --config /dev/null \
 
 ### Securing Your FGA Credentials
 
-Auth0 FGA credentials (Store ID, API Token, Client ID, Client Secret) grant full access to your authorization data. Follow these best practices:
+Auth0 FGA credentials (Client ID, Client Secret) grant full access to your authorization data. Follow these best practices:
 
-**✅ DO:**
-- Store credentials in environment variables
+**DO:**
+- Store credentials in environment variables or secret managers
 - Use `~/.fga.yaml` for persistent CLI configuration (not committed to git)
 - Use `.env` files with `.gitignore` for project-specific config
-- Rotate API tokens regularly (Dashboard → Settings → API Tokens)
-- Use separate tokens per environment (dev, staging, production)
-- Use separate tokens per application/service
-- Store tokens in secret management systems (AWS Secrets Manager, HashiCorp Vault, etc.) for production
+- Create separate Authorized Clients per environment (dev, staging, production)
+- Create separate Authorized Clients per application/service
+- Rotate credentials regularly by creating new clients and revoking old ones
+- Store credentials in secret management systems (AWS Secrets Manager, HashiCorp Vault, etc.) for production
 
-**❌ DON'T:**
+**DON'T:**
 - Never commit credentials to git repositories
 - Never hardcode credentials in source files
 - Never share credentials in plaintext (email, Slack, etc.)
-- Never use production tokens in development
+- Never use production credentials in development
 - Never log credentials to console or files
 - Never include credentials in screenshots or demos
 
 ### Credential Storage Options
 
-**Option 1: Environment Variables (Quick Start)**
-```bash
-# Set temporarily for current shell session
-export FGA_STORE_ID='01ABC...'
-export FGA_API_TOKEN='your-token-here'
-export FGA_API_URL='https://api.us1.fga.dev'
-```
-
-**Option 2: ~/.fga.yaml (Recommended for CLI)**
+**Option 1: ~/.fga.yaml (Recommended for CLI)**
 ```yaml
 # ~/.fga.yaml (in your home directory, NOT in project)
-default_store_id: 01ABC...
-api_url: https://api.us1.fga.dev
-api_token: your-token-here
+api-url: https://api.us1.fga.dev
+store-id: 01ABC...
+client-id: your-client-id
+client-secret: your-client-secret
+api-token-issuer: auth.fga.dev
+api-audience: https://api.us1.fga.dev/
 ```
 
-Then CLI commands work without flags:
-```bash
-fga model get  # Uses credentials from ~/.fga.yaml
-```
-
-**Option 3: .env File (Recommended for Projects)**
+**Option 2: .env File (Recommended for Projects)**
 ```bash
 # Create .env file (add to .gitignore!)
 cat > .env <<EOF
 FGA_STORE_ID=01ABC...
-FGA_API_TOKEN=your-token-here
 FGA_API_URL=https://api.us1.fga.dev
+FGA_CLIENT_ID=your-client-id
+FGA_CLIENT_SECRET=your-client-secret
+FGA_API_TOKEN_ISSUER=auth.fga.dev
+FGA_API_AUDIENCE=https://api.us1.fga.dev/
 EOF
 
 # Add to .gitignore
 echo ".env" >> .gitignore
 
-# Load with direnv or dotenv
+# Load in shell
 source .env
 ```
 
-**Option 4: Secret Management (Recommended for Production)**
+**Option 3: Secret Management (Recommended for Production)**
 ```bash
 # AWS Secrets Manager
 aws secretsmanager get-secret-value --secret-id fga-credentials
@@ -536,13 +507,13 @@ vault kv get secret/fga-credentials
 
 # Kubernetes Secrets
 kubectl create secret generic fga-credentials \
-  --from-literal=store-id=01ABC... \
-  --from-literal=api-token=your-token
+  --from-literal=client-id=your-client-id \
+  --from-literal=client-secret=your-client-secret
 ```
 
 ### Working with Claude Code & Credentials
 
-**INSTRUCTIONS FOR CLAUDE:** When a user provides FGA credentials (Store ID, API Token, Client ID, Client Secret) in the conversation, you MUST:
+**INSTRUCTIONS FOR CLAUDE:** When a user provides FGA credentials (Client ID, Client Secret) in the conversation, you MUST:
 
 1. **Immediately offer to create secure storage:**
    ```
@@ -554,175 +525,83 @@ kubectl create secret generic fga-credentials \
 
 2. **Create the .env file** (if user agrees):
    - Use the Write tool to create `.env` with the provided credentials
+   - Include ALL required fields: FGA_STORE_ID, FGA_API_URL, FGA_CLIENT_ID, FGA_CLIENT_SECRET, FGA_API_TOKEN_ISSUER, FGA_API_AUDIENCE
    - Add `.env` to `.gitignore` if not already present
    - Never echo credentials back in plain text
 
 3. **Use the correct authentication method for FGA CLI commands:**
-
-   **If using Client Credentials (FGA_CLIENT_ID + FGA_CLIENT_SECRET):**
-   - MUST include ALL FOUR parameters: `--client-id`, `--client-secret`, `--api-token-issuer auth.fga.dev`, `--api-audience https://api.us1.fga.dev/`
-   - Use `--config /dev/null` to bypass ~/.fga.yaml conflicts
-   - Example:
-     ```bash
-     source .env
-     fga store import --config /dev/null \
-       --file store.fga.yaml \
-       --store-id "$FGA_STORE_ID" \
-       --api-url "$FGA_API_URL" \
-       --client-id "$FGA_CLIENT_ID" \
-       --client-secret "$FGA_CLIENT_SECRET" \
-       --api-token-issuer "auth.fga.dev" \
-       --api-audience "https://api.us1.fga.dev/"
-     ```
-
-   **If using Direct API Token (FGA_API_TOKEN):**
-   - Simpler approach for CLI usage
-   - Can rely on ~/.fga.yaml configuration
-   - Example:
-     ```bash
-     fga store import --file store.fga.yaml --store-id "$FGA_STORE_ID"
-     ```
+   ```bash
+   source .env
+   fga store import \
+     --file store.fga.yaml \
+     --store-id "$FGA_STORE_ID" \
+     --api-url "$FGA_API_URL" \
+     --client-id "$FGA_CLIENT_ID" \
+     --client-secret "$FGA_CLIENT_SECRET" \
+     --api-token-issuer "$FGA_API_TOKEN_ISSUER" \
+     --api-audience "$FGA_API_AUDIENCE"
+   ```
 
 4. **When commands hang with "Using config file..." and no progress:**
-   - This indicates authentication issues or config file conflicts
-   - Try using `--config /dev/null` to bypass ~/.fga.yaml
-   - Ensure all client credential parameters are provided if using that method
-   - See the "Troubleshooting CLI Authentication Issues" section above
+   - This indicates authentication issues
+   - Use explicit flags to bypass config file issues
+   - Ensure all four client credential parameters are provided
 
 5. **Use environment variable references in ALL commands:**
-   - ✅ `fga model get --store-id $FGA_STORE_ID`
-   - ❌ `fga model get --store-id 01ABC123...` (never hardcode)
+   - `fga model get --store-id $FGA_STORE_ID`
+   - Never hardcode: `fga model get --store-id 01ABC123...`
 
-6. **Remind about token rotation:**
+6. **Remind about credential rotation:**
    ```
-   Note: Consider rotating your API token after this session for security.
+   Note: Consider rotating your credentials after this session for security.
+   You can create a new Authorized Client in the dashboard and revoke the old one.
    ```
 
-**Example interaction:**
+### Credential Rotation
 
+Rotate credentials regularly to maintain security:
+
+**Step 1: Create New Authorized Client**
 ```
-User: Here are my FGA credentials:
-FGA_STORE_ID=01KN78Z7WA5HGFC9YC9CE1G8JQ
-FGA_API_TOKEN=abc123token
-FGA_API_URL=https://api.us1.fga.dev
-
-Claude: I'll help you store these securely. Let me:
-1. Create a .env file with your credentials
-2. Add .env to .gitignore to prevent accidental commits
-3. Use environment variables in all CLI commands
-
-[Creates .env file with Write tool]
-[Updates .gitignore with Edit tool]
-
-Your credentials are now stored in .env. I'll reference them as $FGA_STORE_ID
-and $FGA_API_TOKEN in all commands going forward.
-
-Note: Consider rotating your API token after this session for security.
-```
-
----
-
-When using Claude Code to work with Auth0 FGA, you need to provide credentials. Here are secure approaches for users:
-
-**Method 1: Reference Environment Variables (Most Secure)**
-```
-I have my FGA credentials set as environment variables:
-- FGA_STORE_ID
-- FGA_API_TOKEN
-- FGA_API_URL
-
-Please use these when running FGA CLI commands.
-```
-
-Claude will use commands like:
-```bash
-fga model get --store-id $FGA_STORE_ID
-```
-
-**Method 2: Use ~/.fga.yaml (Recommended)**
-```
-I have configured my FGA credentials in ~/.fga.yaml
-
-Please run FGA CLI commands which will use those credentials automatically.
-```
-
-**Method 3: Provide Placeholders, Set Separately**
-```
-I want to work with my FGA store. I'll set the credentials separately.
-
-Here's the structure:
-- Store ID: 01ABC... (example)
-- Region: US1
-
-Please show me commands using $FGA_STORE_ID as a placeholder.
-```
-
-**⚠️ Avoid: Pasting Raw Credentials**
-
-If you must provide credentials directly (e.g., for initial setup):
-- Provide them once in a private session
-- Ask Claude to reference them as variables going forward
-- Rotate the tokens after the session
-- Never include Client Secrets in demos or shared code
-
-Example of safer approach:
-```
-I need help setting up my FGA store. I'll provide credentials once:
-
-Store ID: 01ABC123...
-API Token: fga_abc123... (I'll rotate this after our session)
-
-Please store these as $FGA_STORE_ID and $FGA_API_TOKEN for the rest of our conversation.
-```
-
-### Token Rotation
-
-Rotate API tokens regularly to maintain security:
-
-**Step 1: Create New Token**
-```
-Dashboard → Settings → API Tokens → Create Token
+Dashboard → Settings → Authorized Clients → Create Client
 ```
 
 **Step 2: Update Configuration**
 ```bash
-# Update environment variable
-export FGA_API_TOKEN='new-token-here'
-
-# Or update ~/.fga.yaml
-vim ~/.fga.yaml  # Update api_token field
-
-# Or update secret manager
-aws secretsmanager update-secret --secret-id fga-credentials \
-  --secret-string '{"api_token":"new-token"}'
+# Update .env or ~/.fga.yaml with new credentials
+vim .env  # Update FGA_CLIENT_ID and FGA_CLIENT_SECRET
 ```
 
-**Step 3: Verify New Token Works**
+**Step 3: Verify New Credentials Work**
 ```bash
-fga store list  # Should succeed with new token
+source .env
+fga store list  # Should succeed with new credentials
 ```
 
-**Step 4: Revoke Old Token**
+**Step 4: Revoke Old Client**
 ```
-Dashboard → Settings → API Tokens → Revoke [old token]
+Dashboard → Settings → Authorized Clients → Delete [old client]
 ```
 
 ### Multi-Environment Setup
 
-Use separate credentials per environment:
+Use separate Authorized Clients per environment:
 
 ```bash
-# Development
-export FGA_STORE_ID='01DEV...'
-export FGA_API_TOKEN='dev-token'
+# Development .env
+FGA_STORE_ID=01DEV...
+FGA_CLIENT_ID=dev-client-id
+FGA_CLIENT_SECRET=dev-client-secret
 
-# Staging
-export FGA_STORE_ID='01STAGE...'
-export FGA_API_TOKEN='staging-token'
+# Staging .env
+FGA_STORE_ID=01STAGE...
+FGA_CLIENT_ID=staging-client-id
+FGA_CLIENT_SECRET=staging-client-secret
 
-# Production
-export FGA_STORE_ID='01PROD...'
-export FGA_API_TOKEN='prod-token'
+# Production .env
+FGA_STORE_ID=01PROD...
+FGA_CLIENT_ID=prod-client-id
+FGA_CLIENT_SECRET=prod-client-secret
 ```
 
 Or use multiple `~/.fga.yaml` files:
@@ -739,17 +618,17 @@ fga model get --config ~/.fga.prod.yaml
 If credentials are accidentally exposed:
 
 **Immediate Actions:**
-1. Revoke compromised token: Dashboard → Settings → API Tokens → Revoke
-2. Create new token
-3. Update all systems using the old token
+1. Revoke compromised client: Dashboard → Settings → Authorized Clients → Delete
+2. Create new Authorized Client
+3. Update all systems using the old credentials
 4. Review store access logs for suspicious activity
 
 **Git Commit Exposure:**
-1. Revoke token immediately
-2. DO NOT just delete the file and commit again (token still in git history)
+1. Revoke credentials immediately
+2. DO NOT just delete the file and commit again (credentials still in git history)
 3. Use `git filter-branch` or BFG Repo-Cleaner to remove from history
 4. Force push (coordinate with team)
-5. Rotate all credentials
+5. Create new credentials
 
 **Prevention:**
 - Use git hooks to scan for credentials before commit
@@ -782,7 +661,10 @@ fga model get --store-id <store-id>
 ```bash
 export FGA_STORE_ID=<store-id>
 export FGA_API_URL=https://api.us1.fga.dev
-export FGA_API_TOKEN=<api-token>
+export FGA_CLIENT_ID=<your-client-id>
+export FGA_CLIENT_SECRET=<your-client-secret>
+export FGA_API_TOKEN_ISSUER=auth.fga.dev
+export FGA_API_AUDIENCE=https://api.us1.fga.dev/
 ```
 
 ### Model Deployment Workflow
@@ -921,8 +803,8 @@ type medical_record
 ### Store Management
 - One store per environment (dev, staging, production)
 - Use descriptive store names: "Acme Corp - Production"
-- Generate separate API tokens per application
-- Rotate API tokens regularly
+- Create separate Authorized Clients per application
+- Rotate credentials regularly
 
 ### Performance
 - Minimize nested `from` chains (avoid >3 levels)
@@ -971,7 +853,7 @@ type medical_record
 ## Quick Reference: Common Commands
 
 ```bash
-# Setup
+# Setup (ensure credentials are configured in ~/.fga.yaml or environment)
 fga store list
 export FGA_STORE_ID=<store-id>
 
@@ -1139,14 +1021,19 @@ fga store export --store-id <store-id> > exported-store.fga.yaml
 ```bash
 # Script to deploy store with assertions
 #!/bin/bash
-export FGA_STORE_ID="your-store-id"
-export FGA_API_TOKEN="your-api-token"
+source .env
 
 # Deploy everything including assertions
-fga store import --file production-store.fga.yaml --store-id $FGA_STORE_ID
+fga store import --file production-store.fga.yaml \
+  --store-id "$FGA_STORE_ID" \
+  --api-url "$FGA_API_URL" \
+  --client-id "$FGA_CLIENT_ID" \
+  --client-secret "$FGA_CLIENT_SECRET" \
+  --api-token-issuer "$FGA_API_TOKEN_ISSUER" \
+  --api-audience "$FGA_API_AUDIENCE"
 
 # Verify
-fga store export --store-id $FGA_STORE_ID > verify.yaml
+fga store export --store-id "$FGA_STORE_ID" > verify.yaml
 diff production-store.fga.yaml verify.yaml
 ```
 
@@ -1154,4 +1041,4 @@ diff production-store.fga.yaml verify.yaml
 
 ---
 
-When users ask about Auth0 FGA, dashboard.fga.dev, hosted FGA, or Okta FGA, provide this Auth0 FGA-specific guidance in addition to the generic OpenFGA modeling concepts.
+When users ask about Auth0 FGA, dashboard.fga.dev, hosted FGA, or Okta FGA, provide this Auth0 FGA-specific guidance. Remember that Auth0 FGA uses OAuth2 Client Credentials exclusively - there is no simple "API Token" you can create from the dashboard.
