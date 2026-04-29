@@ -58,9 +58,9 @@ When invoked with `/fga`, you provide expert guidance on:
    ```
 
 3. **User will need from dashboard.fga.dev**:
-   - Store ID (from dashboard URL or store list)
-   - API Token (from Settings > API Tokens)
-   - Client ID and Client Secret (if using OAuth)
+   - Store ID (from dashboard URL or `fga store list`)
+   - Client ID and Client Secret (from Settings > Authorized Clients)
+   - Note: Auth0 FGA uses OAuth2 Client Credentials flow - there is no simple "API Token"
 
 4. **Verify connection**:
    ```bash
@@ -75,7 +75,10 @@ When invoked with `/fga`, you provide expert guidance on:
    ```bash
    export FGA_STORE_ID=<store-id>
    export FGA_API_URL=https://api.us1.fga.dev
-   export FGA_API_TOKEN=<api-token>
+   export FGA_CLIENT_ID=<client-id>
+   export FGA_CLIENT_SECRET=<client-secret>
+   export FGA_API_TOKEN_ISSUER=auth.fga.dev
+   export FGA_API_AUDIENCE=https://api.us1.fga.dev/
    ```
 
 ### 2. Pull Down an Existing Model from Auth0 FGA
@@ -325,33 +328,57 @@ When invoked with `/fga`, you provide expert guidance on:
 
    **JavaScript/TypeScript**:
    ```typescript
-   import { FGA } from '@auth0/fga';
+   import { OpenFgaClient, CredentialsMethod } from '@openfga/sdk';
 
-   const fga = new FGA({
-     apiUrl: process.env.FGA_API_URL, // https://api.us1.fga.dev
+   const fgaClient = new OpenFgaClient({
+     apiUrl: process.env.FGA_API_URL,           // https://api.us1.fga.dev
      storeId: process.env.FGA_STORE_ID,
-     apiToken: process.env.FGA_API_TOKEN,
+     credentials: {
+       method: CredentialsMethod.ClientCredentials,
+       config: {
+         apiTokenIssuer: process.env.FGA_API_TOKEN_ISSUER,   // auth.fga.dev
+         apiAudience: process.env.FGA_API_AUDIENCE,          // https://api.us1.fga.dev/
+         clientId: process.env.FGA_CLIENT_ID,
+         clientSecret: process.env.FGA_CLIENT_SECRET,
+       },
+     },
    });
    ```
 
    **Python**:
    ```python
-   from auth0_fga import FGAClient
+   import openfga_sdk
+   from openfga_sdk.client import OpenFgaClient
+   from openfga_sdk.credentials import Credentials, CredentialConfiguration
 
-   client = FGAClient(
-       api_url=os.getenv('FGA_API_URL'),
-       store_id=os.getenv('FGA_STORE_ID'),
-       api_token=os.getenv('FGA_API_TOKEN')
+   credentials = Credentials(
+       method='client_credentials',
+       configuration=CredentialConfiguration(
+           api_issuer=os.environ.get('FGA_API_TOKEN_ISSUER'),
+           api_audience=os.environ.get('FGA_API_AUDIENCE'),
+           client_id=os.environ.get('FGA_CLIENT_ID'),
+           client_secret=os.environ.get('FGA_CLIENT_SECRET'),
+       )
    )
+
+   configuration = openfga_sdk.ClientConfiguration(
+       api_url=os.environ.get('FGA_API_URL'),
+       store_id=os.environ.get('FGA_STORE_ID'),
+       credentials=credentials,
+   )
+
+   async with OpenFgaClient(configuration) as fga_client:
+       # Use fga_client
+       pass
    ```
 
 3. **Show authorization check example**:
    ```typescript
    // Check if user can perform action
-   const { allowed } = await fga.check({
+   const { allowed } = await fgaClient.check({
      user: 'user:alice',
      relation: 'can_read',
-     object: 'document:readme'
+     object: 'document:readme',
    });
 
    if (allowed) {
@@ -365,32 +392,34 @@ When invoked with `/fga`, you provide expert guidance on:
 4. **Show write tuple example**:
    ```typescript
    // Grant alice ownership of document
-   await fga.write({
+   await fgaClient.write({
      writes: [{
        user: 'user:alice',
        relation: 'owner',
-       object: 'document:readme'
-     }]
+       object: 'document:readme',
+     }],
    });
    ```
 
 5. **Show list objects example**:
    ```typescript
    // Get all documents alice can read
-   const { objects } = await fga.listObjects({
+   const { objects } = await fgaClient.listObjects({
      user: 'user:alice',
      relation: 'can_read',
-     type: 'document'
+     type: 'document',
    });
    ```
 
 6. **Add error handling**:
    ```typescript
    try {
-     const result = await fga.check({...});
+     const result = await fgaClient.check({...});
    } catch (error) {
      if (error.code === 'FGA_STORE_NOT_FOUND') {
-       console.error('Store not found');
+       console.error('Store not found - check FGA_STORE_ID');
+     } else if (error.code === 'FGA_UNAUTHORIZED') {
+       console.error('Invalid credentials - check Client ID/Secret');
      }
      // Handle other errors
    }
@@ -456,7 +485,7 @@ When invoked with `/fga`, you provide expert guidance on:
    npm install @auth0/nextjs-auth0
 
    # Install FGA SDK
-   npm install @auth0/fga
+   npm install @openfga/sdk
    ```
 
 4. **Configure Auth0 authentication**:
@@ -474,18 +503,29 @@ When invoked with `/fga`, you provide expert guidance on:
    ```bash
    FGA_API_URL='https://api.us1.fga.dev'
    FGA_STORE_ID='<your-store-id>'
-   FGA_API_TOKEN='<your-api-token>'
+   FGA_CLIENT_ID='<your-client-id>'
+   FGA_CLIENT_SECRET='<your-client-secret>'
+   FGA_API_TOKEN_ISSUER='auth.fga.dev'
+   FGA_API_AUDIENCE='https://api.us1.fga.dev/'
    ```
 
 6. **Create FGA client wrapper**:
    ```typescript
    // lib/fga.ts
-   import { FGA } from '@auth0/fga';
+   import { OpenFgaClient, CredentialsMethod } from '@openfga/sdk';
 
-   export const fga = new FGA({
+   export const fgaClient = new OpenFgaClient({
      apiUrl: process.env.FGA_API_URL!,
      storeId: process.env.FGA_STORE_ID!,
-     apiToken: process.env.FGA_API_TOKEN!,
+     credentials: {
+       method: CredentialsMethod.ClientCredentials,
+       config: {
+         apiTokenIssuer: process.env.FGA_API_TOKEN_ISSUER!,
+         apiAudience: process.env.FGA_API_AUDIENCE!,
+         clientId: process.env.FGA_CLIENT_ID!,
+         clientSecret: process.env.FGA_CLIENT_SECRET!,
+       },
+     },
    });
 
    export async function checkPermission(
@@ -493,10 +533,10 @@ When invoked with `/fga`, you provide expert guidance on:
      relation: string,
      object: string
    ): Promise<boolean> {
-     const { allowed } = await fga.check({
+     const { allowed } = await fgaClient.check({
        user: `user:${userId}`,
        relation,
-       object
+       object,
      });
      return allowed;
    }
