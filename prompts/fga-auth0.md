@@ -313,8 +313,7 @@ pip install openfga_sdk
 **Initialization with Client Credentials**:
 ```python
 import os
-import openfga_sdk
-from openfga_sdk.client import OpenFgaClient
+from openfga_sdk import ClientConfiguration, OpenFgaClient
 from openfga_sdk.credentials import Credentials, CredentialConfiguration
 
 credentials = Credentials(
@@ -327,7 +326,7 @@ credentials = Credentials(
     )
 )
 
-configuration = openfga_sdk.ClientConfiguration(
+configuration = ClientConfiguration(
     api_url=os.environ.get('FGA_API_URL'),      # https://api.us1.fga.dev
     store_id=os.environ.get('FGA_STORE_ID'),
     credentials=credentials,

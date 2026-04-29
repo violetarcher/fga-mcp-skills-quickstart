@@ -318,13 +318,11 @@ When invoked with `/fga`, you provide expert guidance on:
 
 **Your process:**
 1. **Ask which SDK**:
-   - JavaScript/TypeScript (most common)
+   - JavaScript/TypeScript (most common for demos)
    - Python
-   - Go
-   - .NET
-   - Java
+   - Go, .NET, Java (see https://openfga.dev/docs/getting-started/install-sdk)
 
-2. **Provide initialization code**:
+2. **Provide initialization code** (JS and Python shown below; for Go, .NET, Java see official docs):
 
    **JavaScript/TypeScript**:
    ```typescript
@@ -347,8 +345,8 @@ When invoked with `/fga`, you provide expert guidance on:
 
    **Python**:
    ```python
-   import openfga_sdk
-   from openfga_sdk.client import OpenFgaClient
+   import os
+   from openfga_sdk import ClientConfiguration, OpenFgaClient
    from openfga_sdk.credentials import Credentials, CredentialConfiguration
 
    credentials = Credentials(
@@ -361,7 +359,7 @@ When invoked with `/fga`, you provide expert guidance on:
        )
    )
 
-   configuration = openfga_sdk.ClientConfiguration(
+   configuration = ClientConfiguration(
        api_url=os.environ.get('FGA_API_URL'),
        store_id=os.environ.get('FGA_STORE_ID'),
        credentials=credentials,
