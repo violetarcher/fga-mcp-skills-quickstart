@@ -1,58 +1,54 @@
 # FGA Modeling MCP Server
 
-A specialized MCP (Model Context Protocol) server designed for use with **Claude Code CLI**, providing expert-level FGA authorization modeling guidance directly in your terminal. This package includes both the MCP server and a comprehensive FGA skill for building fine-grained authorization systems.
+A specialized MCP (Model Context Protocol) server designed for use with **Claude Code CLI**, providing expert-level FGA authorization modeling guidance directly in your terminal. Pairs with the OpenFGA team's official skill for a complete development workflow.
 
 Watch it in action: [YouTube Demo](https://www.youtube.com/watch?v=JNBtf-1NrPM)
 
 ## Credits & Attribution
 
-This is a packaged distribution that includes both the MCP server and FGA skill for easy installation with Claude Code. The original MCP server was created by **[Andrés Aguiar](https://github.com/aaguiarz)** at https://github.com/aaguiarz/openfga-modeling-mcp.
+The original MCP server was created by **[Andrés Aguiar](https://github.com/aaguiarz)** at https://github.com/aaguiarz/openfga-modeling-mcp.
 
-This enhanced version provides expert FGA guidance based on:
-- Official FGA documentation
-- Google's Zanzibar paper
-- Real-world ReBAC implementation patterns
-- Auth0 FGA (Okta FGA) best practices
-- Community best practices
+The OpenFGA skill is maintained by the **[OpenFGA team](https://github.com/openfga)** at https://github.com/openfga/agent-skills.
 
 ## What You Get
 
-This package provides integrated components for Auth0 FGA development with Claude Code:
+This package provides integrated components for OpenFGA and Auth0 FGA development with Claude Code:
 
-1. **MCP Server** - Automatic expert context injection for FGA queries
-2. **FGA Skill** - Comprehensive `/fga` command for model design, testing, SDK integration, and demo preparation
-3. **Demo App** (Coming Soon) - Blank canvas Next.js app with Auth0 + FGA + LiteLLM integration
+1. **MCP Server** - Automatic expert context injection for FGA queries (maintained in this repo)
+2. **OpenFGA Skill** - The official OpenFGA team's `/openfga` skill for model design, testing, SDK integration, and more — installed separately via `npx skills add openfga/agent-skills`
+3. **Lucid MCP Server** - Connect Claude to your Lucid diagrams to create visuals, search documents, and share with your team (optional, requires internal gateway access)
 
-Together, they transform Claude Code into an expert Auth0 FGA development assistant for sales engineers.
+> **Note on Auth0 FGA workflows:** The OpenFGA team's skill covers generic OpenFGA modeling best practices. If you need Auth0 FGA-specific workflows (store management at dashboard.fga.dev, hosted-service CLI commands, sales demo prep), you will need to supplement with your own guidance — that content is no longer bundled here.
 
-## 🏗️ Architecture: How They Work Together
+Together, they transform Claude Code into an expert OpenFGA/Auth0 FGA development assistant.
 
-### MCP Server vs FGA Skill
+## Architecture: How They Work Together
 
-| Aspect | MCP Server | FGA Skill |
-|--------|-----------|-----------|
-| **Activation** | Automatic (passive) | Manual `/fga` (active) |
+### MCP Server vs OpenFGA Skill
+
+| Aspect | MCP Server | OpenFGA Skill |
+|--------|-----------|---------------|
+| **Activation** | Automatic (passive) | Manual `/openfga` or auto-triggered |
 | **Purpose** | Knowledge injection | Task execution |
-| **User Action** | Just ask questions | Invoke explicit command |
+| **User Action** | Just ask questions | Invoke explicit command or ask FGA questions |
 | **Output** | Context for Claude | Concrete actions (files, CLI commands) |
 | **Workflow** | Single-step (context lookup) | Multi-step (guided process) |
-| **When Used** | Every FGA question | Specific sales engineering tasks |
+| **Maintained by** | This repo | [openfga/agent-skills](https://github.com/openfga/agent-skills) |
 
 ### Example Workflow
 
 1. **You ask:** "Design a document management authorization model"
 2. **MCP server** automatically provides FGA best practices to Claude (invisible to you)
-3. **You invoke:** `/fga design a document management model`
+3. **You invoke:** `/openfga design a document management model`
 4. **Skill** uses the MCP-provided context and executes workflow:
    - Asks about requirements
    - Designs model with best practices
    - Validates DSL syntax
    - Generates test files
-   - Offers to deploy to Auth0 FGA store
 
-**In short:** The MCP server makes Claude an FGA expert. The skill turns that expertise into actionable sales engineering workflows.
+**In short:** The MCP server makes Claude an FGA expert. The skill turns that expertise into actionable development workflows.
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -69,8 +65,6 @@ Together, they transform Claude Code into an expert Auth0 FGA development assist
 
 #### Option 1: Automated Install (Recommended)
 
-Works with both bash and zsh:
-
 ```bash
 # Clone this repository
 git clone https://github.com/violetarcher/fga-mcp-skills-quickstart.git
@@ -85,45 +79,35 @@ The install script will:
 - Check prerequisites (Node.js, Claude CLI, FGA CLI)
 - Build the MCP server
 - Register it with Claude Code
-- Install the FGA skill
-- Verify the installation
 
-**Shell Compatibility**: The script works with bash, zsh, fish, and all POSIX-compatible shells. It uses `#!/usr/bin/env bash` so it will automatically run in bash regardless of your default shell. No configuration needed.
+After the script completes:
+
+```bash
+# Install the official OpenFGA skill
+npx skills add openfga/agent-skills
+```
 
 #### Option 2: Manual Install
 
 1. **Clone and build the MCP server**
 
 ```bash
-# Clone this repository
 git clone https://github.com/violetarcher/fga-mcp-skills-quickstart.git
 cd fga-mcp-skills-quickstart
-
-# Build the server
 npm install
 npm run build
 ```
 
 2. **Register the MCP server with Claude Code**
 
-This tells Claude Code to run the MCP server automatically:
-
 ```bash
-# Register with the current directory's path
 claude mcp add --scope user fga -- node $(pwd)/dist/index.js
 ```
 
-What this does:
-- `claude mcp add --scope user fga` - Registers a server named "fga" globally for all projects
-- `--scope user` - Makes the server available in all Claude Code sessions (not just this project)
-- `--` - Separator between server name and command
-- `node $(pwd)/dist/index.js` - Command to start the server ($(pwd) expands to absolute path)
-
-3. **Install the FGA skill**
+3. **Install the OpenFGA skill**
 
 ```bash
-# Copy the skill to Claude Code's skill directory
-cp -r skill ~/.claude/skills/fga
+npx skills add openfga/agent-skills
 ```
 
 4. **Verify installation**
@@ -131,9 +115,6 @@ cp -r skill ~/.claude/skills/fga
 ```bash
 # Check MCP server is registered
 claude mcp list
-
-# Restart Claude Code
-claude
 ```
 
 5. **Test it out**
@@ -147,42 +128,48 @@ You should see `get_context_for_query` and `list_available_contexts` tools.
 
 Then try the FGA skill:
 ```
-/fga design an authorization model for a document management system
+/openfga design an authorization model for a document management system
 ```
 
-## 🎯 Key Features
+### Lucid MCP Server (Optional)
+
+The Lucid MCP server connects Claude to your Lucid diagrams, letting you intelligently search for files, create visuals, and share with your team.
+
+> **Access:** Requires the internal `llm.atko.ai` gateway. Visit [lucid.co/marketplace/e16391cc/lucid-mcp-server](https://lucid.co/marketplace/e16391cc/lucid-mcp-server) for more information.
+
+```bash
+claude mcp add --scope user lucid --transport http https://llm.atko.ai/lucid/mcp
+```
+
+After registering, restart Claude Code and you will have access to Lucid tools for creating and reading diagrams inline in your conversations.
+
+## Key Features
 
 ### MCP Server Features
 
-- **🚨 Automatic Expert Context** - Detects FGA queries and injects relevant guidance
-- **🔍 Intelligent Pattern Matching** - Recognizes 80+ FGA-specific patterns across 7 topic areas
-- **📚 Chunked Expert Knowledge** - 6,000+ words organized into focused topics for efficient context delivery
-- **⚡ Zero Configuration** - Works automatically once installed
-- **🏢 Auth0 FGA Support** - CLI commands, SDK patterns, store management
-- **🎯 Smart Context Delivery** - Returns only relevant sections (70-95% token reduction per query)
+- **Automatic Expert Context** - Detects FGA queries and injects relevant guidance
+- **Intelligent Pattern Matching** - Recognizes 80+ FGA-specific patterns across 7 topic areas
+- **Chunked Expert Knowledge** - 6,000+ words organized into focused topics for efficient context delivery
+- **Zero Configuration** - Works automatically once installed
+- **Auth0 FGA Support** - CLI commands, SDK patterns, store management
+- **Smart Context Delivery** - Returns only relevant sections (70-95% token reduction per query)
 
-### FGA Skill Features
+### OpenFGA Skill Features (via [openfga/agent-skills](https://github.com/openfga/agent-skills))
 
-- **🎨 Model Design** - Interactive design for customer scenarios
-- **✅ DSL Validation** - Syntax checking and security review
-- **🧪 Test Generation** - Comprehensive `.fga.yaml` test files
-- **🔒 Security Review** - Permission logic verification
-- **⚡ Performance Optimization** - Efficient tuple strategies
-- **🔄 Migration Planning** - Safe model evolution guidance
-- **🏪 Store Management** - Connect to Auth0 FGA stores at dashboard.fga.dev
-- **🚀 SDK Integration** - Code examples for JavaScript, Python, Go, .NET
-- **🎭 Demo Preparation** - Build compelling customer demos
+- **Model Design** - Types, relations, and permission structures
+- **Relationship Patterns** - Direct, concentric, indirect, conditional
+- **Testing & Validation** - `.fga.yaml` test files and CLI usage
+- **Custom Roles** - User-defined roles and role assignments
+- **SDK Integration** - JavaScript/TypeScript, Go, Python, Java, .NET examples
+- **Performance Optimization** - Simplification, tuple minimization, type restrictions
 
-### Demo App Features (Coming Soon)
+### Lucid MCP Server Features
 
-- **🎨 Blank Canvas** - No hardcoded authorization logic
-- **🔐 Auth0 + FGA** - Authentication + authorization ready
-- **🤖 LiteLLM Chat** - AI agent integration
-- **📦 Generic Helpers** - Reusable FGA functions
-- **📚 Example Patterns** - Reference implementations
-- **🏗️ Claude Code Integration** - Build custom demos with AI assistance
+- **Search Lucid documents** - Find diagrams and documents from your workspace
+- **Create visuals** - Generate new Lucid diagrams from Claude
+- **Share with your team** - Collaborate on diagrams without leaving your terminal
 
-## 📖 Usage Guide
+## Usage Guide
 
 ### Using the MCP Server
 
@@ -198,46 +185,32 @@ The MCP server works automatically in the background. When you ask FGA-related q
 "Split my model into modular models"
 ```
 
-**The MCP server intelligently routes queries to focused topics:**
-- **Core Concepts** - "what is openfga", "dsl", "types", "tuples"
-- **Relationships** - "hierarchical permissions", "x from y", "usersets"
-- **Modeling** - "how to model", "step by step", "document management"
-- **Testing** - "test", "validate", ".fga.yaml", "assertions"
-- **Custom Roles** - "role assignment", "user defined roles"
-- **Advanced** - "modules", "best practices", "performance"
-- **Auth0 FGA** - "dashboard.fga.dev", "store id", "hosted fga"
-
 **Efficiency:** Each query returns only 1-3k tokens (instead of 11k), providing relevant context without noise.
 
-### Using the FGA Skill
+### Using the OpenFGA Skill
 
-Invoke the skill explicitly with `/fga` for structured workflows:
+Invoke the skill explicitly with `/openfga` for structured workflows:
 
 ```bash
 # Design a new model
-/fga design an authorization model for [your domain]
+/openfga design an authorization model for [your domain]
 
 # Review existing model
-/fga review my FGA model at ./model.fga
+/openfga review my FGA model at ./model.fga
 
 # Generate tests
-/fga write tests for ./authorization-model.fga
+/openfga write tests for ./authorization-model.fga
 
 # Optimize performance
-/fga optimize my model for better performance
+/openfga optimize my model for better performance
 
 # Security audit
-/fga security review for ./model.fga
+/openfga security review for ./model.fga
 ```
 
-The skill provides:
-- Step-by-step guidance through complex modeling tasks
-- Automatic test generation with the FGA CLI
-- Security checklist validation
-- Performance optimization recommendations
-- Common pattern templates
+The skill also auto-activates when you work with `.fga` model files, `.fga.yaml` test files, or OpenFGA SDK code.
 
-## 🛠️ Development & Testing
+## Development & Testing
 
 ### Run in development mode
 
@@ -259,15 +232,7 @@ npm test
 node dist/index.js < /dev/null
 ```
 
-### Update the skill
-
-If you modify the skill files in `skill/`, reinstall:
-
-```bash
-cp -r skill ~/.claude/skills/fga
-```
-
-## 🔧 Configuration
+## Configuration
 
 ### MCP Server Management
 
@@ -285,16 +250,15 @@ claude mcp remove fga
 claude mcp add --scope user fga -- node /absolute/path/to/fga-mcp-skills-quickstart/dist/index.js
 ```
 
-### Skill Management
+### Updating the OpenFGA Skill
 
-The skill is located at `~/.claude/skills/fga/` after installation. To update:
+The skill is maintained externally. To get the latest version:
 
 ```bash
-cd /path/to/fga-mcp-skills-quickstart
-cp -r skill ~/.claude/skills/fga
+npx skills add openfga/agent-skills
 ```
 
-## 🛠️ Troubleshooting
+## Troubleshooting
 
 ### Installation Issues
 
@@ -313,12 +277,17 @@ chmod +x install.sh
 - Check version: `node --version`
 - Update Node.js from https://nodejs.org
 
-**FGA skill not working**
-- Verify installation: `ls -la ~/.claude/skills/fga`
-- Should contain `SKILL.md` and `reference.md`
-- Reinstall: `cp -r skill ~/.claude/skills/fga`
+**Switching from the old custom skill**
+If you previously installed the custom FGA skill from this repo:
+```bash
+rm -rf ~/.claude/skills/fga
+```
+Then install the official skill:
+```bash
+npx skills add openfga/agent-skills
+```
 
-## 🏗️ Project Structure
+## Project Structure
 
 ```
 fga-mcp-skills-quickstart/
@@ -334,21 +303,16 @@ fga-mcp-skills-quickstart/
 │   ├── fga-custom-roles.md        # Custom role patterns (~1.4k tokens)
 │   ├── fga-advanced.md            # Modules & best practices (~0.6k tokens)
 │   └── fga-auth0.md               # Auth0 FGA specifics (~3.3k tokens)
-├── skill/
-│   ├── SKILL.md                    # FGA skill for sales engineers (839 lines)
-│   └── reference.md                # Quick reference guide
-├── demo-app/                       # (Coming soon) Next.js + Auth0 + FGA + LiteLLM
 ├── dist/                           # Compiled JavaScript output
 ├── install.sh                      # Automated installer (bash/zsh compatible)
 ├── CHUNKING-SUMMARY.md             # Optimization details & benchmarks
 ├── CLAUDE-CODE-SETUP.md            # Detailed setup guide
-├── DEMO-APP-PLAN.md                # Demo app implementation plan
-├── NEXT-STEPS.md                   # Future enhancements context
+├── DEMO-SCRIPT.md                  # Demo walkthrough script
 ├── README.md                       # Main documentation (this file)
 └── package.json                    # Project dependencies
 ```
 
-## 📚 Available MCP Tools
+## Available MCP Tools
 
 ### `get_context_for_query`
 
@@ -373,15 +337,12 @@ Lists all available FGA context prompts and their trigger patterns.
 {}
 ```
 
-## 🎓 Learning Resources
+## Learning Resources
 
-The package includes comprehensive documentation:
-
-- **`skill/SKILL.md`** - Complete FGA skill guide with workflows and patterns (839 lines)
-- **`skill/reference.md`** - Quick reference for OpenFGA DSL syntax
+- **`CHUNKING-SUMMARY.md`** - Performance optimization details (70-95% token reduction)
 - **`prompts/`** - Chunked expert guidance across 7 focused topics (6,000+ words total)
   - Core concepts, relationships, modeling, testing, custom roles, advanced topics, Auth0 FGA
-- **`CHUNKING-SUMMARY.md`** - Performance optimization details (70-95% token reduction)
+- **[openfga/agent-skills](https://github.com/openfga/agent-skills)** - Official OpenFGA skill source
 
 External resources:
 - [OpenFGA Documentation](https://openfga.dev)
@@ -389,8 +350,10 @@ External resources:
 - [Zanzibar Paper](https://research.google/pubs/pub48190/)
 - [OpenFGA Playground](https://play.openfga.dev)
 - [Sample Models](https://github.com/openfga/sample-stores)
+- [Auth0 FGA Dashboard](https://dashboard.fga.dev)
+- [Lucid MCP Server](https://lucid.co/marketplace/e16391cc/lucid-mcp-server)
 
-## 🔬 Technical Details
+## Technical Details
 
 - **Framework**: Model Context Protocol (MCP) SDK v1.17.1
 - **Language**: TypeScript with ES2022 target
@@ -398,9 +361,8 @@ External resources:
 - **Pattern Engine**: Intelligent topic-based routing (80+ patterns across 7 categories)
 - **Context Library**: 6,000+ words chunked into focused topics (70-95% smaller responses)
 - **Logging**: Structured logging with performance metrics
-- **Optimization**: Smart context delivery returns only relevant sections per query
 
-## 🤝 Contributing
+## Contributing
 
 Contributions welcome! To contribute:
 
@@ -410,9 +372,9 @@ Contributions welcome! To contribute:
 4. Test locally with Claude Code
 5. Submit a pull request
 
-For the original MCP server, see [Andrés Aguiar's repository](https://github.com/aaguiarz/openfga-modeling-mcp).
+For the OpenFGA skill, contribute at [openfga/agent-skills](https://github.com/openfga/agent-skills).
 
-## 📄 License
+## License
 
 MIT License - Copyright (c) 2025 Andrés Aguiar
 
@@ -420,4 +382,4 @@ See [LICENSE](LICENSE) file for full details.
 
 ---
 
-**Ready to build fine-grained authorization systems?** Install the MCP server and FGA skill to get started with expert FGA guidance in Claude Code!
+**Ready to build fine-grained authorization systems?** Install the MCP server and OpenFGA skill to get started with expert FGA guidance in Claude Code!

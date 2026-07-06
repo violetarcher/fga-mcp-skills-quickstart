@@ -23,8 +23,8 @@ claude mcp list
 
 **Verify Skill:**
 ```bash
-ls ~/.claude/skills/fga
-# Should show SKILL.md and reference.md
+# OpenFGA skill is installed via: npx skills add openfga/agent-skills
+# Verify by invoking /openfga in Claude Code
 ```
 
 **Credential Setup (IMPORTANT):**
@@ -165,11 +165,11 @@ fga model test --tests .fga.yaml
 **DO:** Back to Claude Code
 
 **SAY:**
-> "The /fga skill provides structured workflows for FGA tasks. Let's use it to review our model."
+> "The /openfga skill provides structured workflows for FGA tasks. Let's use it to review our model."
 
 **TYPE:**
 ```
-/fga review task-management.fga
+/openfga review task-management.fga
 ```
 
 **EXPECTED:** Skill analyzes model and suggests improvements:
@@ -351,7 +351,7 @@ fga query list-users object:workspace:acme relation:admin user-filter:type:user 
 > "2. We tested locally using .fga.yaml before deploying to production."
 
 **SAY:**
-> "3. We used the /fga skill to review and optimize our model."
+> "3. We used the /openfga skill to review and optimize our model."
 
 **SAY:**
 > "4. We deployed to Auth0 FGA using store import - this gave us model, tuples, AND persistent assertions in one command."

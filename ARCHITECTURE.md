@@ -27,9 +27,8 @@ graph TB
         end
     end
 
-    subgraph Skill["⚙️ FGA Skill (Active - Manual)"]
-        SkillMD["skill/SKILL.md<br/>Structured Workflows"]
-        RefMD["skill/reference.md<br/>DSL Quick Reference"]
+    subgraph Skill["⚙️ OpenFGA Skill (Active - External)"]
+        SkillMD["openfga/agent-skills<br/>Structured Workflows<br/>(maintained by OpenFGA team)"]
     end
 
     UserQuery --> Claude
@@ -91,10 +90,8 @@ graph TB
         Matcher --> PromptFiles
     end
 
-    subgraph SkillArch["Skill Architecture"]
-        SkillFile["skill/SKILL.md<br/>━━━━━━━━━━━━━━━━<br/>• Design workflow<br/>• Review workflow<br/>• Optimize workflow<br/>• Testing workflow"]
-
-        RefFile["skill/reference.md<br/>━━━━━━━━━━━━━━━━<br/>• DSL syntax cheatsheet<br/>• Common patterns<br/>• Quick reference"]
+    subgraph SkillArch["Skill Architecture (External)"]
+        SkillFile["openfga/agent-skills<br/>━━━━━━━━━━━━━━━━<br/>• Design workflow<br/>• Review workflow<br/>• Optimize workflow<br/>• Testing workflow<br/><br/>Install: npx skills add openfga/agent-skills<br/>Source: github.com/openfga/agent-skills"]
     end
 
     Terminal --> Index
@@ -211,7 +208,7 @@ flowchart TD
 
     Start --> SkillDetect["Claude Code detects /fga command"]
 
-    SkillDetect --> LoadSkill["Load skill/SKILL.md<br/>Active workflow instructions"]
+    SkillDetect --> LoadSkill["Load openfga/agent-skills<br/>Active workflow instructions"]
 
     LoadSkill --> ParseCmd["Parse command:<br/>task = 'design a blog platform'"]
 
@@ -280,7 +277,7 @@ graph TD
 
     Root --> Src["src/"]
     Root --> Prompts["prompts/"]
-    Root --> SkillDir["skill/"]
+    Root --> SkillDir["skill (external)"]
     Root --> Tests["test files"]
     Root --> Docs["documentation"]
 
@@ -297,8 +294,7 @@ graph TD
     Prompts --> P7["fga-auth0.md"]
     Prompts --> PBackup["authorization-model.md.backup"]
 
-    SkillDir --> SkillMain["SKILL.md<br/>(workflows)"]
-    SkillDir --> SkillRef["reference.md<br/>(DSL cheatsheet)"]
+    SkillDir["External Skill<br/>openfga/agent-skills"]
 
     Tests --> UAT["test-uat.js<br/>(26 automated tests)"]
     Tests --> UATGuide["UAT-GUIDE.md"]
@@ -420,7 +416,8 @@ Patterns: hierarchical permission, x from y, ...
   - Returns 0.6k-6.3k tokens per tool call
   - User never directly invokes the tools
 
-- **Skill (Active Workflow)**: User explicitly invokes with `/fga`
+- **Skill (Active Workflow)**: User explicitly invokes with `/openfga`
+  - Maintained by the OpenFGA team at [openfga/agent-skills](https://github.com/openfga/agent-skills)
   - Provides structured workflows loaded into Claude's context
   - Guides multi-step processes
   - During execution, Claude may call MCP tools to get expert knowledge

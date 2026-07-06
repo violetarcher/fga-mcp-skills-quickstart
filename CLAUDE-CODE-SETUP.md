@@ -1,52 +1,40 @@
-# Auth0 FGA (Okta FGA) MCP Server - Claude Code Setup
+# FGA MCP Server - Claude Code Setup
 
 **Created by Andrés Aguiar** (original MCP server)
-**Enhanced for Auth0 FGA** (Okta Fine-Grained Authorization)
 **Original Repository**: https://github.com/aaguiarz/openfga-modeling-mcp
 
-Complete guide for installing and configuring the Auth0 FGA MCP Server and FGA Skill with Claude Code CLI for **sales engineers** and **solution architects**.
+Complete guide for installing and configuring the FGA MCP Server and OpenFGA skill with Claude Code CLI.
 
 ## Quick Note
 
-This is a packaged distribution for **Auth0 FGA (Okta FGA)** - the fully managed hosted service at **dashboard.fga.dev**. This includes both the MCP server and an enhanced FGA skill for working with Auth0 FGA stores. The original MCP server was created by Andrés Aguiar.
+This package provides the **OpenFGA Modeling MCP Server** — a passive context-injection tool that automatically enhances Claude's FGA knowledge. The FGA skill is now maintained by the OpenFGA team at [openfga/agent-skills](https://github.com/openfga/agent-skills) and installed separately.
 
 ## What You're Installing
 
-This package provides two integrated components for **Auth0 FGA**:
-
-1. **OpenFGA MCP Server** - Automatic expert context for OpenFGA queries
-2. **Auth0 FGA Skill** - `/fga` command for working with Auth0 FGA stores, designing models, SDK integration, and building customer demos
+1. **OpenFGA MCP Server** - Automatic expert context for OpenFGA queries (this repo)
+2. **OpenFGA Skill** - `/openfga` command for designing models, testing, and SDK integration (external, from openfga/agent-skills)
+3. **Lucid MCP Server** (optional) - Connect Claude to Lucid for creating and reading diagrams
 
 ## Prerequisites
 
 Before installation, ensure you have:
 
-- ✅ **Claude Code CLI** installed and configured
-- ✅ **Node.js 18+**
+- **Claude Code CLI** installed and configured
+- **Node.js 18+**
   ```bash
   node --version  # Should be v18.0.0 or higher
   ```
-- ✅ **Git** for cloning the repository
-- ✅ **Auth0 FGA Account** - Sign up at https://dashboard.fga.dev
-- ✅ **FGA CLI** (required for working with Auth0 FGA stores)
+- **Git** for cloning the repository
+- **FGA CLI** (required for working with FGA stores)
   ```bash
   brew install openfga/tap/fga
   ```
-- ⚠️ **VS Code OpenFGA Extension** (recommended for syntax validation)
+- **VS Code OpenFGA Extension** (recommended for syntax validation)
   - [Install from Marketplace](https://marketplace.visualstudio.com/items?itemName=openfga.openfga-vscode)
-
-### Auth0 FGA Setup
-
-Before using the skill, you'll need:
-1. **Store ID** - From dashboard.fga.dev or via `fga store list`
-2. **API Token** - From dashboard Settings > API Tokens
-3. **Store Access** - Ensure your token has read/write permissions
 
 ## Installation
 
 ### Option 1: Automated Install (Recommended)
-
-The automated installer works with **all shells** (bash, zsh, fish, etc.):
 
 ```bash
 # Clone this repository
@@ -59,15 +47,17 @@ chmod +x install.sh
 ```
 
 The installer will:
-1. ✅ Check all prerequisites
-2. 🔨 Build the MCP server (`npm install && npm run build`)
-3. 📝 Register the server with Claude Code (`claude mcp add`)
-4. 📦 Install the FGA skill to `~/.claude/skills/fga`
-5. ✔️ Verify the installation
+1. Check all prerequisites
+2. Build the MCP server (`npm install && npm run build`)
+3. Register the server with Claude Code (`claude mcp add`)
+
+After the script completes, install the OpenFGA skill:
+
+```bash
+npx skills add openfga/agent-skills
+```
 
 ### Option 2: Manual Install
-
-If you prefer to install manually or the automated script fails:
 
 #### Step 1: Build the MCP Server
 
@@ -93,28 +83,16 @@ ls dist/index.js  # Should exist
 claude mcp add --scope user fga -- node $(pwd)/dist/index.js
 ```
 
-Or with an explicit absolute path:
-```bash
-claude mcp add --scope user fga -- node /absolute/path/to/fga-mcp-skills-quickstart/dist/index.js
-```
-
 Verify registration:
 ```bash
 claude mcp list
 # Should show: fga: node /path/to/dist/index.js - ✓ Connected
 ```
 
-#### Step 3: Install the FGA Skill
+#### Step 3: Install the OpenFGA Skill
 
 ```bash
-# Copy skill files to Claude's skills directory
-cp -r skill ~/.claude/skills/fga
-```
-
-Verify installation:
-```bash
-ls -la ~/.claude/skills/fga
-# Should contain: SKILL.md and reference.md
+npx skills add openfga/agent-skills
 ```
 
 #### Step 4: Restart Claude Code
@@ -125,6 +103,14 @@ ls -la ~/.claude/skills/fga
 
 # Start new session
 claude
+```
+
+#### Step 5: (Optional) Register Lucid MCP Server
+
+> Requires access to the internal `llm.atko.ai` gateway. See [lucid.co/marketplace/e16391cc/lucid-mcp-server](https://lucid.co/marketplace/e16391cc/lucid-mcp-server).
+
+```bash
+claude mcp add --scope user lucid --transport http https://llm.atko.ai/lucid/mcp
 ```
 
 ## Verification
@@ -139,8 +125,8 @@ What MCP tools do you have available?
 ```
 
 You should see:
-- `mcp__openfga__get_context_for_query` - Get relevant OpenFGA context
-- `mcp__openfga__list_available_contexts` - List available contexts
+- `mcp__fga__get_context_for_query` - Get relevant OpenFGA context
+- `mcp__fga__list_available_contexts` - List available contexts
 
 ### 2. Test Automatic Context
 
@@ -151,19 +137,13 @@ How do I model hierarchical permissions in OpenFGA?
 
 Claude should automatically use the MCP server to provide expert context.
 
-### 3. Test FGA Skill
+### 3. Test OpenFGA Skill
 
-Try the skill with your Auth0 FGA store:
 ```
-/fga connect to my Auth0 FGA store
-```
-
-Or design a new model:
-```
-/fga design an authorization model for a document management system
+/openfga design an authorization model for a document management system
 ```
 
-Claude should invoke the skill and guide you through Auth0 FGA workflows.
+Claude should invoke the skill and guide you through the modeling workflow.
 
 ## Configuration Details
 
@@ -182,20 +162,6 @@ The MCP server automatically selects the transport mode:
   - Communicates via stdin/stdout
   - Automatically used by Claude Code
 
-- **HTTP Mode** (for production hosting)
-  - Used when `PORT` environment variable is set
-  - Provides `/health` and `/mcp` endpoints
-  - Example: https://mcp.openfga.dev/mcp
-
-### Skill Location
-
-The FGA skill is installed at:
-```
-~/.claude/skills/fga/
-├── SKILL.md        # Main skill implementation
-└── reference.md    # Quick reference guide
-```
-
 ## Management Commands
 
 ### MCP Server
@@ -204,7 +170,7 @@ The FGA skill is installed at:
 # List all registered MCP servers
 claude mcp list
 
-# Get details about the OpenFGA server
+# Get details about the FGA server
 claude mcp get fga
 
 # Remove the server
@@ -214,17 +180,12 @@ claude mcp remove fga
 claude mcp add --scope user fga -- node /path/to/dist/index.js
 ```
 
-### FGA Skill
+### OpenFGA Skill
+
+The skill is installed by `npx skills add` and managed externally. To update:
 
 ```bash
-# Update the skill after changes
-cp -r skill ~/.claude/skills/fga
-
-# View skill files
-ls -la ~/.claude/skills/fga
-
-# Remove skill
-rm -rf ~/.claude/skills/fga
+npx skills add openfga/agent-skills
 ```
 
 ## Troubleshooting
@@ -238,7 +199,7 @@ rm -rf ~/.claude/skills/fga
    ```bash
    claude mcp list
    ```
-   Should show `openfga` with `✓ Connected` status
+   Should show `fga` with `✓ Connected` status
 
 2. Fully restart Claude Code:
    ```bash
@@ -259,28 +220,23 @@ rm -rf ~/.claude/skills/fga
    claude mcp add --scope user fga -- node $(pwd)/dist/index.js
    ```
 
-### FGA Skill Not Working
+### OpenFGA Skill Not Working
 
-**Symptom**: `/fga` command doesn't work
+**Symptom**: `/openfga` command doesn't respond
 
 **Solutions**:
-1. Verify skill files exist:
-   ```bash
-   ls -la ~/.claude/skills/fga
-   ```
-   Should show `SKILL.md` and `reference.md`
+- Check it was installed: `npx skills list` (or equivalent)
+- Reinstall: `npx skills add openfga/agent-skills`
+- Restart Claude Code
 
-2. Check file contents:
-   ```bash
-   head -20 ~/.claude/skills/fga/SKILL.md
-   ```
+### Switching from the Old Custom Skill
 
-3. Reinstall skill:
-   ```bash
-   cp -r skill ~/.claude/skills/fga
-   ```
+If you previously had the custom skill from this repo:
 
-4. Restart Claude Code
+```bash
+rm -rf ~/.claude/skills/fga
+npx skills add openfga/agent-skills
+```
 
 ### Node.js Version Error
 
@@ -288,73 +244,8 @@ rm -rf ~/.claude/skills/fga
 
 **Solution**:
 ```bash
-# Check current version
 node --version
-
-# Install/update Node.js
-# macOS
-brew install node
-
-# Or download from https://nodejs.org
-```
-
-### Build Errors
-
-**Symptom**: `npm run build` fails
-
-**Solutions**:
-1. Clean install:
-   ```bash
-   rm -rf node_modules package-lock.json
-   npm install
-   npm run build
-   ```
-
-2. Check Node.js version (18+ required)
-
-3. Check for TypeScript errors:
-   ```bash
-   npm run build 2>&1 | less
-   ```
-
-### Permission Errors
-
-**Symptom**: "EACCES: permission denied"
-
-**Solutions**:
-```bash
-# Make install script executable
-chmod +x install.sh
-
-# Fix npm permissions (if needed)
-sudo chown -R $(whoami) ~/.npm
-
-# Or use a Node version manager like nvm
-```
-
-## Shell Compatibility
-
-The `install.sh` script works with **all shells**:
-- bash users: `./install.sh`
-- zsh users: `./install.sh`
-- fish users: `./install.sh`
-- Others: `bash install.sh`
-
-The script uses `#!/usr/bin/env bash` which means it automatically runs in bash regardless of your default shell. No configuration needed!
-
-## Development Mode
-
-For contributors or those modifying the server:
-
-```bash
-# Run in development mode (auto-reload)
-npm run dev
-
-# Run with debug logging
-LOG_LEVEL=DEBUG npm run dev
-
-# Watch mode
-npm run watch
+brew install node  # or download from https://nodejs.org
 ```
 
 ## Usage Examples
@@ -372,103 +263,36 @@ Just ask OpenFGA questions naturally:
 
 The MCP server detects these queries and automatically provides expert context.
 
-### Using the FGA Skill (Explicit)
-
-Invoke the skill for Auth0 FGA workflows:
+### Using the OpenFGA Skill (Explicit)
 
 ```bash
-# Connect to Auth0 FGA store
-/fga connect to my Auth0 FGA store
-
-# Pull existing model from store
-/fga get the current model from my store
-
 # Design a new model
-/fga design an authorization model for [customer scenario]
+/openfga design an authorization model for [customer scenario]
 
-# Deploy model to Auth0 FGA
-/fga deploy this model to my store
+# Review existing model
+/openfga review ./model.fga
 
-# Generate and run tests
-/fga write tests for this model
-
-# Add demo data
-/fga add demo data to my store
+# Write tests
+/openfga write tests for this model
 
 # Show SDK integration
-/fga show me how to integrate FGA into a TypeScript app
-
-# Prepare customer demo
-/fga prepare a demo for [healthcare/finance/SaaS]
+/openfga show me how to integrate FGA into a TypeScript app
 ```
-
-## Auth0 FGA Skill Features
-
-The enhanced FGA skill includes workflows for:
-
-1. **Store Management** - Connect to Auth0 FGA stores at dashboard.fga.dev
-2. **Model Pull/Push** - Download and deploy models to stores
-3. **Model Design** - Create authorization models for customer scenarios
-4. **Testing** - Generate and run comprehensive test suites
-5. **SDK Integration** - Code examples for JavaScript, Python, Go, .NET
-6. **Demo Preparation** - Build compelling customer demos
-7. **Tuple Management** - Write demo data to stores
-
-### Common Customer Scenarios
-
-The skill includes pre-built patterns for:
-- Multi-tenant SaaS applications
-- Document management systems
-- Healthcare (HIPAA compliance)
-- Financial services (SOX, PCI compliance)
-
-## Demo Application (Coming Soon)
-
-A blank canvas Next.js demo app is planned for the `/demo-app` directory. See [DEMO-APP-PLAN.md](DEMO-APP-PLAN.md) for the complete implementation plan.
-
-**What it will include:**
-- Next.js 15 + TypeScript + Tailwind CSS
-- Auth0 authentication (working out of the box)
-- Auth0 FGA SDK with helper functions
-- LiteLLM chat agent integration
-- Generic utilities (no hardcoded authorization logic)
-- Example patterns and reference models
-
-**How sales engineers will use it:**
-1. Set up environment (.env.local with Auth0 + FGA + LiteLLM credentials)
-2. Use Claude Code to describe customer use case
-3. Claude Code designs FGA model, builds UI, adds authorization checks
-4. Run demo and show customer
-
-See [DEMO-APP-PLAN.md](DEMO-APP-PLAN.md) for detailed architecture and implementation plan.
-
-## Future Enhancements
-
-See [NEXT-STEPS.md](NEXT-STEPS.md) for other planned enhancements including:
-- Additional customer scenario templates
-- SDK integration improvements
-- Industry-specific model libraries
 
 ## Further Reading
 
 - **Main README**: [README.md](README.md)
-- **FGA Skill Guide**: `~/.claude/skills/fga/SKILL.md`
-- **Quick Reference**: `~/.claude/skills/fga/reference.md`
-- **Next Steps**: [NEXT-STEPS.md](NEXT-STEPS.md)
+- **OpenFGA skill source**: https://github.com/openfga/agent-skills
 - **Auth0 FGA Dashboard**: https://dashboard.fga.dev
-- **Auth0 FGA Docs**: https://auth0.com/docs/get-started/fga-overview
 - **OpenFGA Docs**: https://openfga.dev/docs
-- **Original Repository**: https://github.com/aaguiarz/openfga-modeling-mcp
+- **Original MCP server**: https://github.com/aaguiarz/openfga-modeling-mcp
+- **Lucid MCP Server**: https://lucid.co/marketplace/e16391cc/lucid-mcp-server
 
 ## Credits
 
-**Created by Andrés Aguiar**
+**MCP server created by Andrés Aguiar**
 
-This MCP server and FGA skill provide expert OpenFGA guidance based on:
-- Official OpenFGA documentation
-- Google's Zanzibar paper
-- Real-world ReBAC implementation patterns
-- Community best practices
+**OpenFGA skill maintained by the OpenFGA team** at https://github.com/openfga/agent-skills
 
 ## License
 

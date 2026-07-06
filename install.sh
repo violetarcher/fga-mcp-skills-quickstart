@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 
-# OpenFGA Modeling MCP Server + FGA Skill Installer
+# OpenFGA Modeling MCP Server Installer
 # Created by Andrés Aguiar
 #
 # This script automates the installation of:
 # 1. OpenFGA Modeling MCP Server for Claude Code CLI
-# 2. FGA Skill for Claude Code
 #
 # Compatible with both bash and zsh
 
@@ -31,7 +30,7 @@ else
 fi
 
 echo -e "${BLUE}╔════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║  OpenFGA Modeling MCP Server + FGA Skill Installer        ║${NC}"
+echo -e "${BLUE}║  OpenFGA Modeling MCP Server Installer                    ║${NC}"
 echo -e "${BLUE}║  Created by Andrés Aguiar                                  ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════════════════════════╝${NC}"
 echo ""
@@ -79,7 +78,7 @@ fi
 echo ""
 
 # Step 1: Build MCP Server
-echo -e "${BLUE}[1/4] Building MCP Server...${NC}"
+echo -e "${BLUE}[1/2] Building MCP Server...${NC}"
 cd "$SCRIPT_DIR"
 
 if [ ! -d "node_modules" ]; then
@@ -98,7 +97,7 @@ echo -e "${GREEN}✓ MCP Server built successfully${NC}"
 echo ""
 
 # Step 2: Register MCP Server
-echo -e "${BLUE}[2/4] Registering MCP Server with Claude Code...${NC}"
+echo -e "${BLUE}[2/2] Registering MCP Server with Claude Code...${NC}"
 
 # Check if already registered
 if claude mcp list 2>/dev/null | grep -q "openfga"; then
@@ -129,62 +128,8 @@ if [ "$MCP_SKIPPED" != "true" ]; then
 fi
 echo ""
 
-# Step 3: Install FGA Skill
-echo -e "${BLUE}[3/4] Installing FGA Skill...${NC}"
-
-SKILL_DIR="$HOME/.claude/skills/fga"
-
-if [ -d "$SKILL_DIR" ]; then
-    echo -e "${YELLOW}⚠ FGA skill already installed at $SKILL_DIR${NC}"
-    read -p "  Replace existing skill? (y/n) " -n 1 -r
-    echo ""
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        echo "  Removing existing skill..."
-        rm -rf "$SKILL_DIR"
-    else
-        echo "  Skipping FGA skill installation"
-        echo ""
-        SKILL_SKIPPED=true
-    fi
-fi
-
-if [ "$SKILL_SKIPPED" != "true" ]; then
-    echo "  Creating skill directory..."
-    mkdir -p "$HOME/.claude/skills"
-
-    echo "  Copying skill files..."
-    cp -r "$SCRIPT_DIR/skill" "$SKILL_DIR"
-
-    if [ -f "$SKILL_DIR/SKILL.md" ]; then
-        echo -e "${GREEN}✓ FGA Skill installed successfully${NC}"
-    else
-        echo -e "${RED}✗ FGA Skill installation failed${NC}"
-        exit 1
-    fi
-fi
-echo ""
-
-# Step 4: Verification
-echo -e "${BLUE}[4/4] Verifying installation...${NC}"
-
-echo "  Checking MCP server registration..."
-if claude mcp list | grep -q "openfga.*Connected"; then
-    echo -e "${GREEN}  ✓ MCP Server connected${NC}"
-else
-    echo -e "${YELLOW}  ⚠ MCP Server registered but not connected${NC}"
-    echo -e "${YELLOW}    Restart Claude Code to connect${NC}"
-fi
-
-echo "  Checking FGA skill files..."
-if [ -f "$SKILL_DIR/SKILL.md" ] && [ -f "$SKILL_DIR/reference.md" ]; then
-    echo -e "${GREEN}  ✓ FGA Skill files present${NC}"
-else
-    echo -e "${RED}  ✗ FGA Skill files missing${NC}"
-fi
-
-echo ""
 echo -e "${GREEN}╔════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}║  Installation Complete! 🎉                                 ║${NC}"
+echo -e "${GREEN}║  Installation Complete!                                    ║${NC}"
 echo -e "${GREEN}╚════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 echo "Next steps:"
@@ -192,22 +137,28 @@ echo ""
 echo "1. Restart Claude Code CLI:"
 echo -e "   ${BLUE}claude${NC}"
 echo ""
-echo "2. Verify MCP tools are available:"
+echo "2. Install the OpenFGA skill (maintained by the OpenFGA team):"
+echo -e "   ${BLUE}npx skills add openfga/agent-skills${NC}"
+echo ""
+echo "3. (Optional) Register the Lucid MCP server for diagram integration:"
+echo -e "   ${BLUE}claude mcp add --scope user lucid --transport http https://llm.atko.ai/lucid/mcp${NC}"
+echo -e "   ${YELLOW}Note: Requires access to the internal llm.atko.ai gateway.${NC}"
+echo ""
+echo "4. Verify MCP tools are available:"
 echo -e "   ${BLUE}What MCP tools do you have available?${NC}"
 echo ""
-echo "3. Try the FGA skill:"
-echo -e "   ${BLUE}/fga design an authorization model for a document management system${NC}"
+echo "5. Try the FGA skill:"
+echo -e "   ${BLUE}/openfga design an authorization model for a document management system${NC}"
 echo ""
-echo "4. Or just ask OpenFGA questions naturally:"
+echo "6. Or just ask OpenFGA questions naturally:"
 echo -e "   ${BLUE}How do I model hierarchical permissions in OpenFGA?${NC}"
 echo ""
-echo -e "${YELLOW}Tip:${NC} The MCP server works automatically. The /fga skill provides"
+echo -e "${YELLOW}Tip:${NC} The MCP server works automatically. The /openfga skill provides"
 echo "     structured workflows for complex modeling tasks."
 echo ""
 echo "Documentation:"
 echo "  - README: $SCRIPT_DIR/README.md"
-echo "  - FGA Skill Guide: $SKILL_DIR/SKILL.md"
-echo "  - Quick Reference: $SKILL_DIR/reference.md"
+echo "  - OpenFGA skill: https://github.com/openfga/agent-skills"
 echo ""
 echo -e "${BLUE}Original Author: Andrés Aguiar${NC}"
 echo -e "${BLUE}Original Repository: https://github.com/aaguiarz/openfga-modeling-mcp${NC}"
