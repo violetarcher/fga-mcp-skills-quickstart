@@ -347,6 +347,7 @@ Before kicking off a build, use the **[FGA Demo Prompt Builder](https://gemini.g
 
 ### Prompt Tips
 
+- **Set up your store and project directory first.** Before giving Claude the prompt: (1) create a new FGA store at [dashboard.fga.dev](https://dashboard.fga.dev), (2) open the store and save the default model — if you skip this, Claude's model push will fail against an uninitialized store, (3) create a client in the store's settings to receive your `FGA_CLIENT_ID` and `FGA_CLIENT_SECRET`, then (4) create your project directory and drop a `.env` file in the root with those credentials plus your `FGA_STORE_ID` and `FGA_API_URL` before invoking Claude.
 - **Name the demo moments.** Describe the 2–4 scenarios you'll walk through on-screen. Claude will wire them end-to-end and can add a dedicated walkthrough tab.
 - **Specify reset behavior.** For live demos, tell Claude to implement reset by rewriting tuples back to the seed file — not by tracking a diff.
 - **State quality expectations.** If this is going to senior leadership, say so.
