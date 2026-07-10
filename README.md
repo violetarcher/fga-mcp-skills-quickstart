@@ -337,6 +337,67 @@ Lists all available FGA context prompts and their trigger patterns.
 {}
 ```
 
+## Building End-to-End Demos with Claude Code
+
+This toolkit is designed to power full, polished demos — not just model design. Claude Code, paired with the FGA MCP Server and OpenFGA skill, can take a single well-crafted prompt and produce a complete, customer-ready demo application from scratch.
+
+### Using the Prompt Builder Gem
+
+Before kicking off a build, use the **[FGA Demo Prompt Builder](https://gemini.google.com/gem/1Zl0YF902CUrzLV4Pxm7gOACzbqCfDw0U?usp=sharing)** — a Gemini gem that helps you craft a thorough, structured prompt for your specific domain and demo scenario.
+
+### Prompt Tips
+
+- **Name the demo moments.** Describe the 2–4 scenarios you'll walk through on-screen. Claude will wire them end-to-end and can add a dedicated walkthrough tab.
+- **Specify reset behavior.** For live demos, tell Claude to implement reset by rewriting tuples back to the seed file — not by tracking a diff.
+- **State quality expectations.** If this is going to senior leadership, say so.
+- **Prefer a separate FGA directory.** Keep model, tests, and seed tuples together and away from app code.
+
+### Sample Kickoff Prompt
+
+```
+I need a customer-facing demo built on Auth0 FGA for a sales prospect — an investment
+banking and wealth management platform managing capital calls. No authentication — just
+use a persona picker so I can switch between different users on the fly. The whole point
+is to show off fine-grained authorization, so every access decision in the UI should be
+a live FGA check, not hardcoded logic. Include an FGA Logger in the UI so we can see
+the real-time checks. Use the Batch Check API where necessary for bulk checks. Ensure
+the structure of the project has a directory for the demo and for FGA. For demo reset
+functionality, ensure we are resetting the demo to the original seed tuple state in
+order to allow us to add other on-the-fly modifications. Ensure that in our FGA folder
+we have the model, test suite, and tuple seed file. Create a permissions matrix.csv and
+a diagrams.md to visually explain our project — use valid mermaid syntax for all
+diagrams, and include a visual representation of the permissions matrix.
+
+Model these resources: investment_llc, fund, capital_call, and document.
+Roles should be scoped per-fund:
+* fund_admin — full access, can invite users to the fund group, and request money
+  (initiate capital calls).
+* fund_participant (investor) — can view the fund, view relevant documents, and respond
+  to capital calls, but cannot invite others or initiate calls.
+* agent (representing agentic AI workloads) — minimal, strictly scoped access, perhaps
+  temporal or conditional, requiring explicit permission to execute actions on behalf of
+  a user.
+There's also an organizational layer — an individual (e.g., a high-net-worth physician)
+operating under their own investment LLC who manages their own funds but also
+participates in external funds.
+
+The demo needs to hit a few specific moments hard:
+1. Dual-Role Multi-Fund scoping — show one person acting as a fund_admin for their own
+   LLC's fund, while acting as a regular fund_participant in a completely separate fund.
+   Prove that access boundaries (like the ability to request money or invite users) do
+   not leak across funds.
+2. The Capital Call flow — an admin requesting money, proving that only users actively
+   participating in that specific fund group can see and participate in the call.
+3. Invite flow — demonstrate an admin inviting a new participant to a fund, writing the
+   FGA tuple live, and instantly unlocking access for that new user.
+   a. Add the demo scenarios and walkthrough steps to their own tab in the application.
+
+Build it in Next.js with the app router and the OpenFGA SDK. Use the FGA MCP Server and
+OpenFGA Skill where needed. I have a .env with credentials for our FGA store for you to
+use. This has to be polished enough to demo to a senior leadership team, so keep it
+realistic to how a capital call and investment management platform actually runs.
+```
+
 ## Learning Resources
 
 - **`CHUNKING-SUMMARY.md`** - Performance optimization details (70-95% token reduction)
